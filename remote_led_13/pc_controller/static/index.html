@@ -22,22 +22,30 @@
       h1 {
         margin-top: 0;
       }
-      .actions {
+      .actions, .token-row {
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
         margin: 20px 0;
       }
-      button {
+      button, input {
         border: none;
         border-radius: 8px;
         padding: 12px 18px;
         font-size: 16px;
+      }
+      input {
+        min-width: 320px;
+        background: #e5e7eb;
+        color: #111827;
+      }
+      button {
         cursor: pointer;
       }
       .on { background: #22c55e; color: #052e16; }
       .off { background: #ef4444; color: white; }
       .status { background: #60a5fa; color: #0f172a; }
+      .save { background: #f59e0b; color: #111827; }
       pre {
         background: #0f172a;
         padding: 16px;
@@ -52,7 +60,12 @@
   <body>
     <div class="card">
       <h1>Arduino Remote LED Controller</h1>
-      <p class="meta">Minimal local control panel for pin 13 LED via FastAPI + Serial.</p>
+      <p class="meta">Minimal control panel for pin 13 LED via FastAPI + Serial. For public exposure, use an API token.</p>
+
+      <div class="token-row">
+        <input id="token" type="password" placeholder="Optional API token (X-API-Token)" />
+        <button class="save" onclick="saveToken()">Save Token</button>
+      </div>
 
       <div class="actions">
         <button class="on" onclick="sendCommand('/led/on', 'POST')">LED ON</button>
@@ -65,12 +78,25 @@
     </div>
 
     <script>
+      const tokenInput = document.getElementById('token');
+      const output = document.getElementById('output');
+      tokenInput.value = localStorage.getItem('arduino_api_token') || '';
+
+      function saveToken() {
+        localStorage.setItem('arduino_api_token', tokenInput.value.trim());
+        output.textContent = 'Token saved locally in this browser.';
+      }
+
       async function sendCommand(path, method) {
-        const output = document.getElementById('output');
         output.textContent = 'Loading...';
+        const token = tokenInput.value.trim();
+        const headers = {};
+        if (token) {
+          headers['X-API-Token'] = token;
+        }
 
         try {
-          const response = await fetch(path, { method });
+          const response = await fetch(path, { method, headers });
           const data = await response.json();
           output.textContent = JSON.stringify(data, null, 2);
         } catch (error) {
