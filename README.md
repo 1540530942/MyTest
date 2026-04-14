@@ -121,6 +121,12 @@ When a real MQTT broker or Arduino is not available, run the dependency-free moc
 python -m unittest tests.smoke_chain
 ```
 
+To print a readable mock run:
+
+```powershell
+python tests\run_mock_chain.py
+```
+
 This verifies:
 
 ```text

@@ -11,3 +11,4 @@ This file records anything that blocks the real chain and the mock used to keep 
 | MQTT broker | No real broker is confirmed running locally. | Smoke test uses `InMemoryMqttBus`. | Start Mosquitto/EMQX or Docker Compose broker and run bridge against it. |
 | Arduino serial | No live Arduino serial port was exercised in this run. | Smoke test uses `MockSerialClient`. | Plug in Arduino Uno, confirm `ARDUINO_PORT`, then run `run_bridge.ps1`. |
 | Reboot command | `device_reboot` is not safe or implemented for Arduino Uno bridge. | UI button is disabled and API docs mark it as future work. | Add whitelist, confirmation policy, and firmware support before enabling. |
+| GitHub push | GitHub access from this execution environment failed on port 443. | Local commits are preserved; continue local development. | Push manually when network is available: `git push origin feature/personal-domain-visual-control`. |
