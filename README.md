@@ -113,6 +113,27 @@ python -m pip install -r requirements.txt
 .\run_bridge.ps1 -MqttHost 127.0.0.1 -MqttPort 1883 -DeviceId desk-led -ArduinoPort COM3
 ```
 
+## Local Smoke Test
+
+When a real MQTT broker or Arduino is not available, run the dependency-free mock chain:
+
+```powershell
+python -m unittest tests.smoke_chain
+```
+
+This verifies:
+
+```text
+mock Web/API command
+  -> API validation
+  -> in-memory MQTT command topic
+  -> PC bridge core mapping
+  -> mock serial LED response
+  -> in-memory MQTT state topic
+```
+
+Open issues and mocks are tracked in `docs/known-issues.md`.
+
 ## Deploy
 
 ```powershell

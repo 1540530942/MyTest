@@ -42,7 +42,8 @@ The backend should enforce these rules before publishing to MQTT:
 | --- | --- | --- |
 | `led_set` | `devices/{device_id}/cmd` | Set an LED pin to `on` or `off` |
 | `status_get` | `devices/{device_id}/cmd` | Ask the device bridge to report state |
-| `device_reboot` | `devices/{device_id}/cmd` | Request a safe device reboot |
+
+Future commands such as `device_reboot` must stay disabled until the bridge and hardware firmware implement a safe confirmation policy.
 
 ## MQTT State Payload
 

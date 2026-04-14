@@ -6,11 +6,13 @@ import signal
 import sys
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from typing import Any
 
 import paho.mqtt.client as mqtt
 
+from core import error_from_exception
+from core import process_command
+from core import utc_now
 from serial_client import create_client
 
 
@@ -41,10 +43,6 @@ class BridgeConfig:
         return f"devices/{self.device_id}/heartbeat"
 
 
-def utc_now() -> str:
-    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
-
-
 def env_int(name: str, default: int) -> int:
     value = os.getenv(name)
     return int(value) if value else default
@@ -60,40 +58,6 @@ def load_config() -> BridgeConfig:
         arduino_port=os.getenv("ARDUINO_PORT", "COM3"),
         arduino_baudrate=env_int("ARDUINO_BAUDRATE", 115200),
     )
-
-
-def map_to_serial_command(payload: dict[str, Any]) -> str:
-    cmd = payload.get("cmd")
-    value = payload.get("value")
-
-    if cmd == "led_set" and value == "on":
-        return "LED_ON"
-    if cmd == "led_set" and value == "off":
-        return "LED_OFF"
-    if cmd == "status_get":
-        return "STATUS"
-
-    raise ValueError(f"Unsupported command payload: cmd={cmd!r}, value={value!r}")
-
-
-def state_from_response(payload: dict[str, Any], serial_command: str, response: str) -> dict[str, Any]:
-    state: dict[str, str] = {}
-
-    if response == "OK LED_ON" or response == "STATUS ON":
-        state["pin13"] = "on"
-    elif response == "OK LED_OFF" or response == "STATUS OFF":
-        state["pin13"] = "off"
-
-    return {
-        "request_id": payload.get("request_id"),
-        "device_id": payload.get("device_id"),
-        "ok": response.startswith("OK") or response.startswith("STATUS"),
-        "cmd": payload.get("cmd"),
-        "serial_command": serial_command,
-        "serial_response": response,
-        "state": state,
-        "updated_at": utc_now(),
-    }
 
 
 def publish_json(client: mqtt.Client, topic: str, payload: dict[str, Any], retain: bool = False) -> None:
@@ -129,20 +93,13 @@ class MqttSerialBridge:
     def on_message(self, client: mqtt.Client, _userdata: Any, message: mqtt.MQTTMessage) -> None:
         try:
             payload = json.loads(message.payload.decode("utf-8"))
-            serial_command = map_to_serial_command(payload)
-            print(f"MQTT {message.topic}: {payload} -> {serial_command}")
-            response = self.serial_client.send_command(serial_command)
-            state = state_from_response(payload, serial_command, response)
+            print(f"MQTT {message.topic}: {payload}")
+            state = process_command(payload, self.serial_client)
             publish_json(client, self.config.state_topic, state)
             print(f"Published state: {state}")
         except Exception as exc:
-            error_payload = {
-                "device_id": self.config.device_id,
-                "ok": False,
-                "error": str(exc),
-                "raw_payload": message.payload.decode("utf-8", errors="replace"),
-                "updated_at": utc_now(),
-            }
+            raw_payload = message.payload.decode("utf-8", errors="replace")
+            error_payload = error_from_exception(self.config.device_id, raw_payload, exc)
             publish_json(client, self.config.error_topic, error_payload)
             print(f"Published error: {error_payload}", file=sys.stderr)
 
