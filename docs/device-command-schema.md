@@ -2,6 +2,24 @@
 
 This file captures the first command abstraction step from the `Arduino_interact` roadmap.
 
+The current device path is intentionally transitional:
+
+```text
+MQTT command
+  -> PC Serial Bridge
+  -> USB Serial
+  -> Arduino Uno
+  -> LED / GPIO
+```
+
+The later device path should keep the same MQTT schema:
+
+```text
+MQTT command
+  -> ESP32 / native WiFi device
+  -> LED / GPIO / sensor / relay
+```
+
 ## Topics
 
 ```text
@@ -52,3 +70,29 @@ The PC bridge can map structured commands back to the existing serial protocol:
 | `{ "cmd": "status_get" }` | `STATUS` |
 
 This lets the upper layers move to MQTT without replacing the current Arduino Uno firmware first.
+
+## Bridge Responsibilities
+
+The PC Serial Bridge should:
+
+| Responsibility | Detail |
+| --- | --- |
+| Subscribe command topic | Listen to `devices/{device_id}/cmd` |
+| Validate minimal payload | Reject unknown `cmd`, invalid `pin`, or unsupported `value` |
+| Map to serial command | Convert `led_set/on` to `LED_ON`, `led_set/off` to `LED_OFF`, `status_get` to `STATUS` |
+| Read Arduino response | Capture serial output from Arduino Uno |
+| Publish state | Publish result to `devices/{device_id}/state` |
+| Publish errors | Publish failures to `devices/{device_id}/errors` |
+| Reconnect safely | Recover from MQTT or serial disconnects when possible |
+
+## Migration Rule
+
+Do not let the Web UI depend on whether the device is currently Arduino Uno behind a PC bridge or a future ESP32.
+
+Stable contract:
+
+```text
+Web UI/API publishes command-shaped JSON.
+Device side publishes state-shaped JSON.
+Hardware-specific details stay behind the MQTT topic boundary.
+```

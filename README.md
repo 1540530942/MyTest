@@ -2,17 +2,27 @@
 
 This project is the web entry point for the `Arduino_interact` roadmap.
 
-The intended long-term chain is:
+The current MVP uses the transition architecture:
 
 ```text
 Web UI
   -> HTTPS API
   -> command validator
   -> MQTT publish devices/{device_id}/cmd
-  -> PC serial bridge or ESP32
-  -> Arduino / GPIO action
+  -> PC Serial Bridge
+  -> USB Serial
+  -> Arduino Uno
+  -> Pin 13 LED / GPIO action
   -> MQTT publish devices/{device_id}/state
   -> Web UI displays result
+```
+
+Later, the `PC Serial Bridge + Arduino Uno` segment can be replaced by a native WiFi device such as ESP32:
+
+```text
+MQTT Broker
+  -> ESP32 / WiFi device
+  -> GPIO / sensor / relay action
 ```
 
 The current implementation is a static Vite dashboard. It sends structured JSON commands to a configurable API endpoint. The API layer is expected to validate the command and publish it to MQTT.
@@ -55,11 +65,35 @@ This folder maps to the personal-domain and cloud-control part of the roadmap:
 
 ```text
 M1: device command schema
-M2: MQTT + PC serial bridge integration
+M2: MQTT + PC Serial Bridge + Arduino Uno
 M3: cloud server + personal domain + MQTT broker
+M6: replace bridge with ESP32 / native WiFi device
 ```
 
 The browser should not talk directly to the MQTT broker in the first MVP. Keep the browser simple, send commands to the API, and let the API handle auth, validation, audit logs, and MQTT publish.
+
+## Current Hardware Strategy
+
+Use this as the near-term transition path:
+
+```text
+Cloud/API/MQTT
+  -> PC Serial Bridge
+  -> Arduino Uno over USB
+  -> existing serial commands: LED_ON, LED_OFF, STATUS
+```
+
+This keeps the current Arduino Uno demo useful while the cloud and MQTT layers are being built. It also avoids forcing Arduino Uno to handle WiFi, TLS, MQTT, and JSON directly.
+
+Use this as the later migration path:
+
+```text
+Cloud/API/MQTT
+  -> ESP32 or another native WiFi microcontroller
+  -> direct GPIO control and state publish
+```
+
+The command schema and MQTT topics should stay stable across both phases, so the Web UI and API do not need a major rewrite when hardware changes.
 
 ## Deploy
 
