@@ -156,7 +156,12 @@ mock Web/API command
   -> in-memory MQTT state topic
 ```
 
-Open issues and mocks are tracked in `docs/known-issues.md`.
+Open issues and mocks are tracked in:
+
+```text
+docs/known-issues.md
+docs/real-chain-readiness.md
+```
 
 ## Deploy
 

@@ -2,6 +2,8 @@
 
 This file records anything that blocks the real chain and the mock used to keep the architecture moving.
 
+For a full layer-by-layer real-vs-mock breakdown, see `docs/real-chain-readiness.md`.
+
 ## 2026-04-15
 
 | Area | Issue | Current handling | Next step |
