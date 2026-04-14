@@ -95,6 +95,24 @@ Cloud/API/MQTT
 
 The command schema and MQTT topics should stay stable across both phases, so the Web UI and API do not need a major rewrite when hardware changes.
 
+## PC Serial Bridge
+
+The first bridge implementation lives in:
+
+```text
+device_bridge/pc_serial_bridge
+```
+
+It subscribes to `devices/{device_id}/cmd`, maps command JSON to the current Arduino serial commands, and publishes results to `devices/{device_id}/state`.
+
+Start point:
+
+```powershell
+cd device_bridge\pc_serial_bridge
+python -m pip install -r requirements.txt
+.\run_bridge.ps1 -MqttHost 127.0.0.1 -MqttPort 1883 -DeviceId desk-led -ArduinoPort COM3
+```
+
 ## Deploy
 
 ```powershell
