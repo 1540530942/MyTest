@@ -16,6 +16,19 @@ from core import utc_now
 from serial_client import create_client
 
 
+def load_env_file(path: str = ".env") -> None:
+    if not os.path.exists(path):
+        return
+
+    with open(path, "r", encoding="utf-8") as env_file:
+        for raw_line in env_file:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
 @dataclass(frozen=True)
 class BridgeConfig:
     mqtt_host: str
@@ -49,6 +62,9 @@ def env_int(name: str, default: int) -> int:
 
 
 def load_config() -> BridgeConfig:
+    load_env_file()
+    load_env_file(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
+
     return BridgeConfig(
         mqtt_host=os.getenv("MQTT_HOST", "127.0.0.1"),
         mqtt_port=env_int("MQTT_PORT", 1883),

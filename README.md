@@ -29,6 +29,22 @@ The current implementation is a static Vite dashboard. It sends structured JSON 
 
 ## Quick Start
 
+Prepare the Python bridge dependencies:
+
+```powershell
+python -m pip install -r device_bridge\pc_serial_bridge\requirements.txt
+python scripts\check_env.py
+```
+
+Optional local MQTT broker config is provided under `infra/`. After Docker Desktop is installed:
+
+```powershell
+cd scripts
+.\start_mqtt_docker.ps1
+```
+
+Frontend dependencies require Node.js/npm:
+
 ```powershell
 npm install
 npm run dev
@@ -112,6 +128,8 @@ cd device_bridge\pc_serial_bridge
 python -m pip install -r requirements.txt
 .\run_bridge.ps1 -MqttHost 127.0.0.1 -MqttPort 1883 -DeviceId desk-led -ArduinoPort COM3
 ```
+
+If MQTT broker or Arduino hardware is not ready yet, keep using the mock chain below.
 
 ## Local Smoke Test
 
