@@ -63,6 +63,12 @@ input {
   background: rgba(255, 255, 255, 0.72);
 }
 
+code {
+  border-radius: 0.45rem;
+  padding: 0.1rem 0.35rem;
+  background: rgba(18, 32, 29, 0.08);
+}
+
 .shell {
   width: min(1120px, calc(100% - 2rem));
   margin: 0 auto;
@@ -162,6 +168,20 @@ h2 {
   align-items: center;
 }
 
+.form-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.75fr auto;
+  gap: 0.8rem;
+  align-items: end;
+}
+
+.form-grid label {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  color: var(--accent-strong);
+}
+
 .hint {
   margin: 0.8rem 0 0;
   color: var(--muted);
@@ -175,6 +195,15 @@ h2 {
   padding: 0;
   overflow: auto;
   list-style: none;
+}
+
+.payload-preview {
+  margin: 0;
+  border-radius: 1.25rem;
+  padding: 1rem;
+  overflow: auto;
+  color: #f8f1df;
+  background: #12201d;
 }
 
 .log-item {
@@ -207,9 +236,14 @@ h2 {
 
   .status-card,
   .endpoint-row,
-  .log-header {
+  .log-header,
+  .form-grid {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .form-grid {
+    display: flex;
   }
 
   .status-card {

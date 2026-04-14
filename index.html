@@ -1,61 +1,81 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="个人域名在线可视化控制台，用于远程查看设备状态并发送控制指令。"
+      content="Personal domain IoT control dashboard for MQTT-ready device commands."
     />
-    <title>远程设备可视化控制台</title>
+    <title>IoT Control Dashboard</title>
   </head>
   <body>
     <main class="shell">
       <section class="hero">
-        <p class="eyebrow">Personal Domain Remote Control</p>
-        <h1>远程设备可视化控制台</h1>
+        <p class="eyebrow">Personal Domain IoT Control</p>
+        <h1>Device Command Center</h1>
         <p class="hero-copy">
-          面向个人域名部署的网页控制面板，可连接远端 API 或 WebSocket，实时查看设备状态并发送控制指令。
+          A web entry point for the Arduino Interact roadmap: Web UI to API, API to MQTT,
+          MQTT to PC serial bridge or ESP32 devices.
         </p>
       </section>
 
-      <section class="dashboard" aria-label="设备控制面板">
+      <section class="dashboard" aria-label="Device control dashboard">
         <article class="status-card">
           <div>
-            <p class="label">连接状态</p>
-            <h2 id="connectionState">未连接</h2>
+            <p class="label">Connection</p>
+            <h2 id="connectionState">Offline</h2>
           </div>
           <span id="statusLight" class="status-light offline" aria-hidden="true"></span>
         </article>
 
         <article class="control-card">
-          <p class="label">控制指令</p>
+          <p class="label">Commands</p>
           <div class="button-grid">
-            <button data-command="led:on">LED 开启</button>
-            <button data-command="led:off">LED 关闭</button>
-            <button data-command="device:status">读取状态</button>
-            <button data-command="device:reboot" class="danger">重启设备</button>
+            <button data-command="led_set" data-value="on">LED On</button>
+            <button data-command="led_set" data-value="off">LED Off</button>
+            <button data-command="status_get" data-value="">Read Status</button>
+            <button data-command="device_reboot" data-value="" class="danger">Reboot</button>
           </div>
         </article>
 
         <article class="control-card wide">
-          <label for="endpointInput">远端服务地址</label>
-          <div class="endpoint-row">
-            <input
-              id="endpointInput"
-              type="url"
-              placeholder="https://api.your-domain.com/device"
-              autocomplete="url"
-            />
-            <button id="saveEndpointButton" type="button">保存</button>
+          <p class="label">API and Device</p>
+          <div class="form-grid">
+            <label>
+              API endpoint
+              <input
+                id="endpointInput"
+                type="url"
+                placeholder="https://api.your-domain.com/devices/command"
+                autocomplete="url"
+              />
+            </label>
+            <label>
+              Device ID
+              <input id="deviceIdInput" type="text" value="desk-led" />
+            </label>
+            <label>
+              GPIO pin
+              <input id="pinInput" type="number" value="13" min="0" max="99" />
+            </label>
+            <button id="saveSettingsButton" type="button">Save Settings</button>
           </div>
-          <p class="hint">默认通过 HTTP POST 发送 JSON 指令，后续可替换为你的实际服务器接口。</p>
+          <p class="hint">
+            The browser posts a structured JSON command. The backend should validate it,
+            then publish to MQTT topic <code>devices/{device_id}/cmd</code>.
+          </p>
+        </article>
+
+        <article class="control-card wide">
+          <p class="label">Last Payload</p>
+          <pre id="payloadPreview" class="payload-preview"></pre>
         </article>
 
         <article class="log-card wide">
           <div class="log-header">
-            <p class="label">事件日志</p>
-            <button id="clearLogButton" type="button" class="ghost">清空</button>
+            <p class="label">Event Log</p>
+            <button id="clearLogButton" type="button" class="ghost">Clear</button>
           </div>
           <ol id="eventLog" class="event-log" aria-live="polite"></ol>
         </article>

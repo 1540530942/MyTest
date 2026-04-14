@@ -1,48 +1,84 @@
-# 个人域名网页在线可视化控制台
+# Personal Domain IoT Control Dashboard
 
-这是一个面向个人域名部署的远程设备控制网页工程。前端默认通过 HTTP `POST` 向你填写的远端服务地址发送 JSON 指令，适合后续接入 Arduino、ESP32、树莓派或任意自建后端服务。
+This project is the web entry point for the `Arduino_interact` roadmap.
 
-## 快速开始
+The intended long-term chain is:
+
+```text
+Web UI
+  -> HTTPS API
+  -> command validator
+  -> MQTT publish devices/{device_id}/cmd
+  -> PC serial bridge or ESP32
+  -> Arduino / GPIO action
+  -> MQTT publish devices/{device_id}/state
+  -> Web UI displays result
+```
+
+The current implementation is a static Vite dashboard. It sends structured JSON commands to a configurable API endpoint. The API layer is expected to validate the command and publish it to MQTT.
+
+## Quick Start
 
 ```powershell
 npm install
 npm run dev
 ```
 
-浏览器打开终端里显示的本地地址后，填写你的远端接口，例如：
+Open the local Vite URL, then set:
 
 ```text
-https://api.your-domain.com/device
+API endpoint: https://api.your-domain.com/devices/command
+Device ID: desk-led
+GPIO pin: 13
 ```
 
-点击页面按钮时会发送类似下面的数据：
+## Command Payload
+
+Clicking `LED On` sends a payload like:
 
 ```json
 {
-  "command": "led:on",
-  "source": "personal-domain-dashboard",
-  "timestamp": "2026-04-15T00:00:00.000Z"
+  "request_id": "req-20260415000101-ab12cd34",
+  "cmd": "led_set",
+  "device_id": "desk-led",
+  "pin": 13,
+  "value": "on",
+  "source": "web",
+  "mqtt_topic": "devices/desk-led/cmd",
+  "created_at": "2026-04-15T00:01:01.000Z"
 }
 ```
 
-## 部署
+## Roadmap Fit
+
+This folder maps to the personal-domain and cloud-control part of the roadmap:
+
+```text
+M1: device command schema
+M2: MQTT + PC serial bridge integration
+M3: cloud server + personal domain + MQTT broker
+```
+
+The browser should not talk directly to the MQTT broker in the first MVP. Keep the browser simple, send commands to the API, and let the API handle auth, validation, audit logs, and MQTT publish.
+
+## Deploy
 
 ```powershell
 npm run build
 ```
 
-构建结果会输出到 `dist` 目录，可部署到 Nginx、静态网站托管服务、GitHub Pages 或你的个人域名服务器。
+Deploy the generated `dist` directory to your static site host, reverse proxy, GitHub Pages, or personal-domain server.
 
-## Git 远端
+## Git
 
-本工程计划连接到：
+Remote:
 
 ```text
 https://github.com/1540530942/MyTest.git
 ```
 
-如果本机网络可以访问 GitHub，可执行：
+Branch:
 
-```powershell
-git push -u origin feature/personal-domain-visual-control
+```text
+feature/personal-domain-visual-control
 ```

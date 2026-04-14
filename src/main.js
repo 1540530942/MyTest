@@ -1,14 +1,21 @@
 import './styles.css';
 
 const endpointInput = document.querySelector('#endpointInput');
-const saveEndpointButton = document.querySelector('#saveEndpointButton');
+const deviceIdInput = document.querySelector('#deviceIdInput');
+const pinInput = document.querySelector('#pinInput');
+const saveSettingsButton = document.querySelector('#saveSettingsButton');
 const clearLogButton = document.querySelector('#clearLogButton');
 const connectionState = document.querySelector('#connectionState');
 const statusLight = document.querySelector('#statusLight');
+const payloadPreview = document.querySelector('#payloadPreview');
 const eventLog = document.querySelector('#eventLog');
 const commandButtons = document.querySelectorAll('[data-command]');
 
-const storageKey = 'remote-control-endpoint';
+const storageKey = 'iot-control-settings';
+
+function createRequestId() {
+  return `req-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${crypto.randomUUID().slice(0, 8)}`;
+}
 
 function logEvent(message, type = 'info') {
   const item = document.createElement('li');
@@ -23,31 +30,60 @@ function setConnectionState(state, online) {
   statusLight.classList.toggle('offline', !online);
 }
 
-function getEndpoint() {
-  return endpointInput.value.trim();
+function getSettings() {
+  return {
+    endpoint: endpointInput.value.trim(),
+    deviceId: deviceIdInput.value.trim() || 'desk-led',
+    pin: Number.parseInt(pinInput.value, 10) || 13
+  };
 }
 
-async function sendCommand(command) {
-  const endpoint = getEndpoint();
+function saveSettings() {
+  localStorage.setItem(storageKey, JSON.stringify(getSettings()));
+  logEvent('Settings saved.', 'success');
+}
 
-  if (!endpoint) {
-    logEvent('请先填写并保存远端服务地址。', 'warn');
-    setConnectionState('缺少服务地址', false);
+function loadSettings() {
+  const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+  endpointInput.value = saved.endpoint || '';
+  deviceIdInput.value = saved.deviceId || 'desk-led';
+  pinInput.value = saved.pin || 13;
+}
+
+function buildCommandPayload(command, value) {
+  const settings = getSettings();
+
+  return {
+    request_id: createRequestId(),
+    cmd: command,
+    device_id: settings.deviceId,
+    pin: settings.pin,
+    value: value || undefined,
+    source: 'web',
+    mqtt_topic: `devices/${settings.deviceId}/cmd`,
+    created_at: new Date().toISOString()
+  };
+}
+
+async function sendCommand(command, value) {
+  const settings = getSettings();
+  const payload = buildCommandPayload(command, value);
+  payloadPreview.textContent = JSON.stringify(payload, null, 2);
+
+  if (!settings.endpoint) {
+    logEvent('Set an API endpoint before sending commands.', 'warn');
+    setConnectionState('Missing API', false);
     return;
   }
 
-  setConnectionState('发送中', true);
-  logEvent(`发送指令：${command}`);
+  setConnectionState('Sending', true);
+  logEvent(`Sending ${payload.cmd} to ${payload.mqtt_topic}`);
 
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(settings.endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        command,
-        source: 'personal-domain-dashboard',
-        timestamp: new Date().toISOString()
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -55,32 +91,29 @@ async function sendCommand(command) {
     }
 
     const text = await response.text();
-    setConnectionState('在线', true);
-    logEvent(text ? `远端响应：${text}` : '远端已确认指令。', 'success');
+    setConnectionState('Online', true);
+    logEvent(text ? `API response: ${text}` : 'Command accepted by API.', 'success');
   } catch (error) {
-    setConnectionState('连接失败', false);
-    logEvent(`发送失败：${error.message}`, 'error');
+    setConnectionState('Failed', false);
+    logEvent(`Send failed: ${error.message}`, 'error');
   }
 }
 
 function init() {
-  endpointInput.value = localStorage.getItem(storageKey) ?? '';
-  setConnectionState(endpointInput.value ? '待发送' : '未连接', false);
-  logEvent('控制台已就绪。');
+  loadSettings();
+  setConnectionState(endpointInput.value ? 'Ready' : 'Offline', false);
+  payloadPreview.textContent = JSON.stringify(buildCommandPayload('led_set', 'on'), null, 2);
+  logEvent('Dashboard ready.');
 
-  saveEndpointButton.addEventListener('click', () => {
-    localStorage.setItem(storageKey, getEndpoint());
-    logEvent('远端服务地址已保存。', 'success');
-    setConnectionState('待发送', false);
-  });
+  saveSettingsButton.addEventListener('click', saveSettings);
 
   clearLogButton.addEventListener('click', () => {
     eventLog.replaceChildren();
-    logEvent('日志已清空。');
+    logEvent('Log cleared.');
   });
 
   commandButtons.forEach((button) => {
-    button.addEventListener('click', () => sendCommand(button.dataset.command));
+    button.addEventListener('click', () => sendCommand(button.dataset.command, button.dataset.value));
   });
 }
 
