@@ -10,6 +10,7 @@ For a full layer-by-layer real-vs-mock breakdown, see `docs/real-chain-readiness
 | --- | --- | --- | --- |
 | Frontend build | `node` and `npm` are not installed in this environment. | Static source was edited and Python-side tests were run. | Install Node.js, then run `npm install` and `npm run build`. |
 | MQTT dependency | Resolved in this environment by installing `paho-mqtt==2.1.0` and `pyserial==3.5`. | Dependency-free core logic and `tests/smoke_chain.py` remain available for offline validation. | Keep `device_bridge/pc_serial_bridge/requirements.txt` as the reproducible install source. |
+| API dependency | Resolved in this environment by installing FastAPI and uvicorn from `cloud_api/requirements.txt`. | Real API can now be imported and started, but not yet tested against a live MQTT broker. | Start MQTT broker, then run `cloud_api/run_api.ps1`. |
 | MQTT broker | No real broker is confirmed running locally. | Smoke test uses `InMemoryMqttBus`. | Start Mosquitto/EMQX or Docker Compose broker and run bridge against it. |
 | Arduino serial | No live Arduino serial port was exercised in this run. | Smoke test uses `MockSerialClient`. | Plug in Arduino Uno, confirm `ARDUINO_PORT`, then run `run_bridge.ps1`. |
 | Reboot command | `device_reboot` is not safe or implemented for Arduino Uno bridge. | UI button is disabled and API docs mark it as future work. | Add whitelist, confirmation policy, and firmware support before enabling. |

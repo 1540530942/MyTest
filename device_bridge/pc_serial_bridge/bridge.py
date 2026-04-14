@@ -110,7 +110,7 @@ class MqttSerialBridge:
         try:
             payload = json.loads(message.payload.decode("utf-8"))
             print(f"MQTT {message.topic}: {payload}")
-            state = process_command(payload, self.serial_client)
+            state = process_command(payload, self.serial_client, expected_device_id=self.config.device_id)
             publish_json(client, self.config.state_topic, state)
             print(f"Published state: {state}")
         except Exception as exc:

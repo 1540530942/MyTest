@@ -25,11 +25,14 @@ def error_topic(device_id: str) -> str:
     return f"devices/{device_id}/errors"
 
 
-def validate_command_payload(payload: dict[str, Any]) -> None:
+def validate_command_payload(payload: dict[str, Any], expected_device_id: str | None = None) -> None:
     required = ["request_id", "cmd", "device_id", "source", "created_at"]
     missing = [field for field in required if not payload.get(field)]
     if missing:
         raise ValueError(f"Missing required fields: {', '.join(missing)}")
+
+    if expected_device_id and payload["device_id"] != expected_device_id:
+        raise ValueError(f"Unexpected device_id: expected {expected_device_id}, got {payload['device_id']}")
 
     cmd = payload["cmd"]
     if cmd == "led_set":
@@ -45,8 +48,8 @@ def validate_command_payload(payload: dict[str, Any]) -> None:
     raise ValueError(f"Unsupported command: {cmd}")
 
 
-def map_to_serial_command(payload: dict[str, Any]) -> str:
-    validate_command_payload(payload)
+def map_to_serial_command(payload: dict[str, Any], expected_device_id: str | None = None) -> str:
+    validate_command_payload(payload, expected_device_id=expected_device_id)
 
     cmd = payload.get("cmd")
     value = payload.get("value")
@@ -91,7 +94,11 @@ def error_from_exception(device_id: str, raw_payload: str, exc: Exception) -> di
     }
 
 
-def process_command(payload: dict[str, Any], serial_client: SerialClient) -> dict[str, Any]:
-    serial_command = map_to_serial_command(payload)
+def process_command(
+    payload: dict[str, Any],
+    serial_client: SerialClient,
+    expected_device_id: str | None = None,
+) -> dict[str, Any]:
+    serial_command = map_to_serial_command(payload, expected_device_id=expected_device_id)
     response = serial_client.send_command(serial_command)
     return state_from_response(payload, serial_command, response)

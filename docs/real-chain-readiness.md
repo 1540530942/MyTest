@@ -19,7 +19,7 @@ Browser Web UI
 
 | Layer | Mock used now | File | Why it exists |
 | --- | --- | --- | --- |
-| Cloud API | Dependency-free API function | `cloud_api/mock_api.py` | Real FastAPI command service has not been implemented yet. |
+| Cloud API mock | Dependency-free API function | `cloud_api/mock_api.py` | Keeps smoke tests working without FastAPI or MQTT broker. |
 | MQTT broker | In-memory message list | `tests/smoke_chain.py`, `tests/run_mock_chain.py` | No real Mosquitto/EMQX broker is running in this environment. |
 | Arduino serial | Mock serial client | `tests/smoke_chain.py`, `tests/run_mock_chain.py` | No live Arduino serial port was tested in this run. |
 | Browser runtime | Source-only frontend checks | `index.html`, `src/main.js` | Node.js/npm are not installed, so Vite cannot run here yet. |
@@ -31,8 +31,9 @@ Browser Web UI
 | --- | --- | --- |
 | Python runtime | Real Python 3.13.12 is available. | `python --version` passed. |
 | Bridge dependencies | Real `paho-mqtt==2.1.0` and `pyserial==3.5` installed. | `python scripts/check_env.py` reports both as OK. |
-| Bridge core logic | Real command validation, serial mapping, and state formatting exist. | `device_bridge/pc_serial_bridge/core.py` |
+| Bridge core logic | Real command validation, device ID guard, serial mapping, and state formatting exist. | `device_bridge/pc_serial_bridge/core.py` |
 | PC bridge runner | Real MQTT client + serial client runner exists. | `device_bridge/pc_serial_bridge/bridge.py` |
+| HTTP API implementation | Real FastAPI command publisher exists, but dependency install and live broker test are still pending. | `cloud_api/app.py` |
 | MQTT config | Real Mosquitto config and Docker Compose template exist. | `infra/docker-compose.yml`, `infra/mosquitto/mosquitto.conf` |
 | Environment check | Real readiness checker exists. | `scripts/check_env.py` |
 
@@ -44,8 +45,8 @@ Browser Web UI
 | Docker Desktop or Mosquitto | Cannot start a real local MQTT broker from this environment. | Install Docker Desktop, then run `cd scripts; .\start_mqtt_docker.ps1`. |
 | Running MQTT broker on `127.0.0.1:1883` | Real bridge has nowhere to subscribe/publish. | Start Mosquitto/EMQX and confirm `scripts/check_env.py` reports `mqtt tcp` OK. |
 | Arduino Uno connected on configured COM port | Real bridge cannot send `LED_ON`, `LED_OFF`, or `STATUS`. | Plug in Arduino Uno, confirm port, set `ARDUINO_PORT`, then run bridge. |
-| Real HTTP API service | Browser cannot send commands into MQTT without using mock function. | Implement FastAPI service for `POST /devices/command`. |
-| Frontend-to-API integration test | Browser request has not been tested against a real API. | Start real API + Vite, click LED buttons, confirm MQTT command appears. |
+| Live API to broker test | FastAPI/uvicorn dependencies are installed, but API publish has not been tested against a live MQTT broker. | Start broker, run API, then POST a command from Web UI or curl/PowerShell. |
+| Frontend-to-API integration test | Browser request has not been tested against a live API and MQTT broker. | Start real API + Vite, click LED buttons, confirm MQTT command appears. |
 
 ## Exact Steps To Run Without Mocks
 
@@ -83,7 +84,14 @@ cd device_bridge\pc_serial_bridge
 .\run_bridge.ps1 -MqttHost 127.0.0.1 -MqttPort 1883 -DeviceId desk-led -ArduinoPort COM3
 ```
 
-7. In another terminal, publish a real MQTT command:
+7. In another terminal, watch state:
+
+```powershell
+cd device_bridge\pc_serial_bridge
+python .\watch_state.py --host 127.0.0.1 --device-id desk-led
+```
+
+8. In another terminal, publish a real MQTT command:
 
 ```powershell
 cd device_bridge\pc_serial_bridge
@@ -92,16 +100,22 @@ python .\publish_test.py --host 127.0.0.1 --device-id desk-led --cmd status_get
 python .\publish_test.py --host 127.0.0.1 --device-id desk-led --cmd led_set --value off
 ```
 
-8. Confirm Arduino LED changes and bridge prints state publish logs.
-9. Implement/start the real HTTP API service.
-10. Start frontend:
+9. Confirm Arduino LED changes and `watch_state.py` prints real state messages.
+10. Install and start the real HTTP API service:
+
+```powershell
+python -m pip install -r cloud_api\requirements.txt
+.\cloud_api\run_api.ps1 -HostName 127.0.0.1 -Port 8000
+```
+
+11. Start frontend:
 
 ```powershell
 npm install
 npm run dev
 ```
 
-11. Set API endpoint in the browser and verify button clicks reach the real MQTT broker and Arduino.
+12. Set API endpoint in the browser and verify button clicks reach the real MQTT broker and Arduino.
 
 ## Current No-Mock Blockers
 

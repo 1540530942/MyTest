@@ -96,6 +96,24 @@ class SmokeChainTest(unittest.TestCase):
         bus.publish(error_topic(device_id), {"ok": False, "error": "validation failed"})
         self.assertFalse(bus.latest(error_topic(device_id))["ok"])
 
+    def test_bridge_rejects_wrong_device_id(self) -> None:
+        serial_client = MockSerialClient()
+        payload = {
+            "request_id": "req-smoke-003",
+            "cmd": "led_set",
+            "device_id": "other-device",
+            "pin": 13,
+            "value": "on",
+            "source": "web",
+            "mqtt_topic": command_topic("other-device"),
+            "created_at": "2026-04-15T00:00:00Z",
+        }
+
+        with self.assertRaises(ValueError):
+            process_command(payload, serial_client, expected_device_id="desk-led")
+
+        self.assertEqual(serial_client.commands, [])
+
 
 if __name__ == "__main__":
     unittest.main()

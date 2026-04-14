@@ -28,6 +28,14 @@ python -m pip install -r requirements.txt
 
 ## Publish Test Command
 
+In one terminal, watch returned state:
+
+```powershell
+python .\watch_state.py --host 127.0.0.1 --device-id desk-led
+```
+
+In another terminal, publish commands:
+
 ```powershell
 python .\publish_test.py --host 127.0.0.1 --device-id desk-led --cmd led_set --value on
 python .\publish_test.py --host 127.0.0.1 --device-id desk-led --cmd led_set --value off

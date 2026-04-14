@@ -88,6 +88,27 @@ M6: replace bridge with ESP32 / native WiFi device
 
 The browser should not talk directly to the MQTT broker in the first MVP. Keep the browser simple, send commands to the API, and let the API handle auth, validation, audit logs, and MQTT publish.
 
+## Cloud API
+
+The first real HTTP API lives in:
+
+```text
+cloud_api/app.py
+```
+
+Install and run it from the project root:
+
+```powershell
+python -m pip install -r cloud_api\requirements.txt
+.\cloud_api\run_api.ps1 -HostName 127.0.0.1 -Port 8000
+```
+
+Then set the Web UI endpoint to:
+
+```text
+http://127.0.0.1:8000/devices/command
+```
+
 ## Current Hardware Strategy
 
 Use this as the near-term transition path:
@@ -161,6 +182,7 @@ Open issues and mocks are tracked in:
 ```text
 docs/known-issues.md
 docs/real-chain-readiness.md
+docs/flow-audit.md
 ```
 
 ## Deploy

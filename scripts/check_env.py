@@ -41,6 +41,8 @@ def main() -> int:
         CheckResult("python", True, sys.version.split()[0]),
         CheckResult("paho-mqtt", module_available("paho.mqtt.client"), "Python MQTT client"),
         CheckResult("pyserial", module_available("serial"), "Python serial client"),
+        CheckResult("fastapi", module_available("fastapi"), "Python HTTP API framework"),
+        CheckResult("uvicorn", module_available("uvicorn"), "Python ASGI server"),
         CheckResult("node", shutil.which("node") is not None, shutil.which("node") or "not found"),
         CheckResult("npm", shutil.which("npm") is not None, shutil.which("npm") or "not found"),
         CheckResult("mosquitto", shutil.which("mosquitto") is not None, shutil.which("mosquitto") or "not found"),
@@ -56,14 +58,14 @@ def main() -> int:
     for result in results:
         print_result(result)
 
-    required = ["paho-mqtt", "pyserial"]
+    required = ["paho-mqtt", "pyserial", "fastapi", "uvicorn"]
     failed_required = [result.name for result in results if result.name in required and not result.ok]
 
     if failed_required:
         print(f"\nRequired checks failed: {', '.join(failed_required)}")
         return 1
 
-    print("\nPython bridge dependencies are ready.")
+    print("\nPython bridge and API dependencies are ready.")
     if not tcp_connectable(mqtt_host, mqtt_port):
         print("MQTT broker is not reachable yet. Start Mosquitto/EMQX before running the real bridge.")
     if shutil.which("node") is None or shutil.which("npm") is None:
