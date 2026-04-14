@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="个人域名在线可视化控制台，用于远程查看设备状态并发送控制指令。"
+    />
+    <title>远程设备可视化控制台</title>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Personal Domain Remote Control</p>
+        <h1>远程设备可视化控制台</h1>
+        <p class="hero-copy">
+          面向个人域名部署的网页控制面板，可连接远端 API 或 WebSocket，实时查看设备状态并发送控制指令。
+        </p>
+      </section>
+
+      <section class="dashboard" aria-label="设备控制面板">
+        <article class="status-card">
+          <div>
+            <p class="label">连接状态</p>
+            <h2 id="connectionState">未连接</h2>
+          </div>
+          <span id="statusLight" class="status-light offline" aria-hidden="true"></span>
+        </article>
+
+        <article class="control-card">
+          <p class="label">控制指令</p>
+          <div class="button-grid">
+            <button data-command="led:on">LED 开启</button>
+            <button data-command="led:off">LED 关闭</button>
+            <button data-command="device:status">读取状态</button>
+            <button data-command="device:reboot" class="danger">重启设备</button>
+          </div>
+        </article>
+
+        <article class="control-card wide">
+          <label for="endpointInput">远端服务地址</label>
+          <div class="endpoint-row">
+            <input
+              id="endpointInput"
+              type="url"
+              placeholder="https://api.your-domain.com/device"
+              autocomplete="url"
+            />
+            <button id="saveEndpointButton" type="button">保存</button>
+          </div>
+          <p class="hint">默认通过 HTTP POST 发送 JSON 指令，后续可替换为你的实际服务器接口。</p>
+        </article>
+
+        <article class="log-card wide">
+          <div class="log-header">
+            <p class="label">事件日志</p>
+            <button id="clearLogButton" type="button" class="ghost">清空</button>
+          </div>
+          <ol id="eventLog" class="event-log" aria-live="polite"></ol>
+        </article>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
