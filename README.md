@@ -88,6 +88,21 @@ M6: replace bridge with ESP32 / native WiFi device
 
 The browser should not talk directly to the MQTT broker in the first MVP. Keep the browser simple, send commands to the API, and let the API handle auth, validation, audit logs, and MQTT publish.
 
+## Future Cloud Server
+
+The later cloud deployment target is:
+
+```text
+Cloud server + Docker
+  -> Mosquitto container / EMQX container
+  -> FastAPI container
+  -> Web UI container / static site
+  -> Caddy or Nginx reverse proxy
+  -> personal domain HTTPS
+```
+
+The local Docker Mosquitto setup is intentionally aligned with this future server layout. See `docs/cloud-server-architecture.md` for the domain plan, service split, and migration path.
+
 ## Cloud API
 
 The first real HTTP API lives in:
@@ -183,6 +198,7 @@ Open issues and mocks are tracked in:
 docs/known-issues.md
 docs/real-chain-readiness.md
 docs/flow-audit.md
+docs/cloud-server-architecture.md
 ```
 
 ## Deploy
