@@ -43,6 +43,7 @@ def main() -> int:
         CheckResult("pyserial", module_available("serial"), "Python serial client"),
         CheckResult("fastapi", module_available("fastapi"), "Python HTTP API framework"),
         CheckResult("uvicorn", module_available("uvicorn"), "Python ASGI server"),
+        CheckResult("amqtt", module_available("amqtt"), "Python local MQTT broker fallback"),
         CheckResult("node", shutil.which("node") is not None, shutil.which("node") or "not found"),
         CheckResult("npm", shutil.which("npm") is not None, shutil.which("npm") or "not found"),
         CheckResult("mosquitto", shutil.which("mosquitto") is not None, shutil.which("mosquitto") or "not found"),
@@ -67,7 +68,7 @@ def main() -> int:
 
     print("\nPython bridge and API dependencies are ready.")
     if not tcp_connectable(mqtt_host, mqtt_port):
-        print("MQTT broker is not reachable yet. Start Mosquitto/EMQX before running the real bridge.")
+        print("MQTT broker is not reachable yet. Start Mosquitto/EMQX or run scripts/start_mqtt_amqtt.ps1 before running the real bridge.")
     if shutil.which("node") is None or shutil.which("npm") is None:
         print("Node/npm are not installed yet. Frontend build remains blocked until Node.js is installed.")
 

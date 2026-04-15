@@ -20,9 +20,9 @@ Browser Web UI
 | Layer | Mock used now | File | Why it exists |
 | --- | --- | --- | --- |
 | Cloud API mock | Dependency-free API function | `cloud_api/mock_api.py` | Keeps smoke tests working without FastAPI or MQTT broker. |
-| MQTT broker | In-memory message list | `tests/smoke_chain.py`, `tests/run_mock_chain.py` | No real Mosquitto/EMQX broker is running in this environment. |
-| Arduino serial | Mock serial client | `tests/smoke_chain.py`, `tests/run_mock_chain.py` | No live Arduino serial port was tested in this run. |
-| Browser runtime | Source-only frontend checks | `index.html`, `src/main.js` | Node.js/npm are not installed, so Vite cannot run here yet. |
+| MQTT broker in tests | In-memory message list | `tests/smoke_chain.py`, `tests/run_mock_chain.py` | Unit tests stay broker-free, even though a real local broker probe has now passed. |
+| Arduino serial in tests | Mock serial client | `tests/smoke_chain.py`, `tests/run_mock_chain.py` | Unit tests stay hardware-free, even though live COM3 serial has now passed. |
+| Browser runtime in tests | Source-only frontend checks | `index.html`, `src/main.js` | Frontend build has passed with a local Node runtime, but browser click testing is still pending. |
 | Device reboot | Disabled UI button | `index.html` | Reboot is not implemented or safe for the Arduino Uno bridge yet. |
 
 ## What Is Real Already
@@ -34,6 +34,7 @@ Browser Web UI
 | Bridge core logic | Real command validation, device ID guard, serial mapping, and state formatting exist. | `device_bridge/pc_serial_bridge/core.py` |
 | PC bridge runner | Real MQTT client + serial client runner exists. | `device_bridge/pc_serial_bridge/bridge.py` |
 | HTTP API implementation | Real FastAPI command publisher exists, but dependency install and live broker test are still pending. | `cloud_api/app.py` |
+| Local real-chain probe | Real API to real MQTT broker fallback to real bridge to real Arduino COM3 has passed. | `runtime_logs/`, `scripts/run_real_local_chain.ps1` |
 | MQTT config | Real Mosquitto config and Docker Compose template exist. | `infra/docker-compose.yml`, `infra/mosquitto/mosquitto.conf` |
 | Environment check | Real readiness checker exists. | `scripts/check_env.py` |
 
@@ -41,11 +42,11 @@ Browser Web UI
 
 | Missing item | Current impact | Needed action |
 | --- | --- | --- |
-| Node.js/npm | Cannot run `npm install`, `npm run dev`, or `npm run build`. | Install Node.js LTS, then rerun `python scripts/check_env.py`. |
-| Docker Desktop or Mosquitto | Cannot start a real local MQTT broker from this environment. | Install Docker Desktop, then run `cd scripts; .\start_mqtt_docker.ps1`. |
-| Running MQTT broker on `127.0.0.1:1883` | Real bridge has nowhere to subscribe/publish. | Start Mosquitto/EMQX and confirm `scripts/check_env.py` reports `mqtt tcp` OK. |
-| Arduino Uno connected on configured COM port | Real bridge cannot send `LED_ON`, `LED_OFF`, or `STATUS`. | Plug in Arduino Uno, confirm port, set `ARDUINO_PORT`, then run bridge. |
-| Live API to broker test | FastAPI/uvicorn dependencies are installed, but API publish has not been tested against a live MQTT broker. | Start broker, run API, then POST a command from Web UI or curl/PowerShell. |
+| System Node.js/npm | Not installed in PATH. A local embedded Node runtime was used to verify build. | Install Node.js LTS for normal development workflow. |
+| Docker Desktop or Mosquitto | Not installed in PATH. | Install Docker Desktop for the preferred Mosquitto container path. |
+| Running MQTT broker on `127.0.0.1:1883` | Not persistent after probes stop. | Start `scripts/start_mqtt_amqtt.ps1` or Docker Mosquitto before running bridge. |
+| Arduino Uno connected on configured COM port | Passed on `COM3`. | Keep `ARDUINO_PORT=COM3` unless Windows changes the port. |
+| Live API to broker test | Passed with amqtt fallback broker. | Repeat after Docker Mosquitto is installed. |
 | Frontend-to-API integration test | Browser request has not been tested against a live API and MQTT broker. | Start real API + Vite, click LED buttons, confirm MQTT command appears. |
 
 ## Exact Steps To Run Without Mocks

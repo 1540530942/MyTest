@@ -41,4 +41,24 @@ After Docker Desktop is installed:
 .\start_mqtt_docker.ps1
 ```
 
+## MQTT Broker Without Docker
+
+For local real-chain testing before Docker Desktop is installed:
+
+```powershell
+.\start_mqtt_amqtt.ps1
+```
+
+This starts a real MQTT broker on `127.0.0.1:1883` using Python `amqtt`.
+
+## One-Command Real Local Probe
+
+With Arduino on `COM3`:
+
+```powershell
+.\run_real_local_chain.ps1 -ArduinoPort COM3
+```
+
+This starts a temporary broker, state watcher, PC Serial Bridge, FastAPI, sends `on/status/off`, prints the state logs, and stops the temporary processes.
+
 See `install_windows_tools.md` for Node.js and Docker installation notes.

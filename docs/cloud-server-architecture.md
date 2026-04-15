@@ -13,6 +13,20 @@ Cloud server + Docker
   -> personal domain HTTPS
 ```
 
+The cloud stack is only the control plane. The hardware stays on the device side:
+
+```text
+Device side, current transition
+  -> Windows PC Serial Bridge
+  -> USB Serial COM3
+  -> Arduino Uno
+  -> Pin 13 LED / GPIO / sensors
+
+Device side, later native WiFi
+  -> ESP32 / ESP32-CAM / WiFi device
+  -> GPIO / relay / sensor / camera
+```
+
 ## Service Responsibilities
 
 | Service | Responsibility | First choice |

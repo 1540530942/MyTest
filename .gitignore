@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .vite/
+runtime_logs/
 __pycache__/
 *.py[cod]
 .env

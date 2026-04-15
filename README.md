@@ -43,6 +43,13 @@ cd scripts
 .\start_mqtt_docker.ps1
 ```
 
+If Docker Desktop is not installed yet, use the Python MQTT broker fallback for local real-chain testing:
+
+```powershell
+cd scripts
+.\start_mqtt_amqtt.ps1
+```
+
 Frontend dependencies require Node.js/npm:
 
 ```powershell
@@ -199,6 +206,25 @@ docs/known-issues.md
 docs/real-chain-readiness.md
 docs/flow-audit.md
 docs/cloud-server-architecture.md
+```
+
+## Real Local Chain Verified
+
+The current Windows + Arduino transition chain has been verified with a real MQTT broker fallback, real FastAPI API, real PC Serial Bridge, and real Arduino Uno on `COM3`:
+
+```text
+FastAPI POST /devices/command
+  -> MQTT devices/desk-led/cmd
+  -> PC Serial Bridge
+  -> COM3 Arduino Uno
+  -> LED_ON / STATUS / LED_OFF
+  -> MQTT devices/desk-led/state
+```
+
+You can rerun the local real-chain probe with:
+
+```powershell
+.\scripts\run_real_local_chain.ps1 -ArduinoPort COM3
 ```
 
 ## Deploy
