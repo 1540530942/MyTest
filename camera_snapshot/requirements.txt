@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+requests
+
+# Raspberry Pi sender backend options:
+# picamera2 is usually installed from apt on Raspberry Pi OS.
+# opencv-python can be used as a fallback when cv2.VideoCapture(0) works.

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TurboPi Camera Snapshot</title>
+  <link rel="stylesheet" href="./static/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">TurboPi</p>
+        <h1>Camera Snapshot</h1>
+      </div>
+      <div id="statusBadge" class="badge">未连接</div>
+    </header>
+
+    <section class="viewer">
+      <img id="cameraImage" alt="TurboPi camera latest frame">
+      <div id="emptyState" class="empty">等待拍照任务</div>
+    </section>
+
+    <section class="controls">
+      <button id="singleButton" class="primary" type="button">单帧发送</button>
+      <button id="continuousButton" type="button">持续发送</button>
+      <label class="field">
+        <span>频率</span>
+        <select id="intervalSelect">
+          <option value="200">5 fps</option>
+          <option value="500">2 fps</option>
+          <option value="1000" selected>1 fps</option>
+          <option value="2000">0.5 fps</option>
+          <option value="5000">0.2 fps</option>
+        </select>
+      </label>
+      <button id="refreshButton" type="button">刷新</button>
+    </section>
+
+    <section class="meta">
+      <div><span>设备</span><strong id="deviceId">-</strong></div>
+      <div><span>帧 ID</span><strong id="frameId">-</strong></div>
+      <div><span>更新时间</span><strong id="updatedAt">-</strong></div>
+      <div><span>大小</span><strong id="contentLength">-</strong></div>
+      <div><span>任务</span><strong id="taskState">-</strong></div>
+    </section>
+  </main>
+  <script src="./static/app.js"></script>
+</body>
+</html>
