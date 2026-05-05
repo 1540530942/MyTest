@@ -75,6 +75,21 @@
     "data_owner": "llm_manager_data"
   },
   {
+    "id": "pi5-robot",
+    "name": "Pi5 巡查机器人",
+    "public_url": "http://www.wangyutang.cn/robot/",
+    "local_url": "http://127.0.0.1:8093/",
+    "route_strategy": "path-through-gateway + hardware-simulation-first",
+    "path_prefix": "/robot/",
+    "service_url": "http://pi5-robot:8093",
+    "health_url": "http://pi5-robot:8093/api/health",
+    "image": "pi5-robot:local",
+    "status": "scaffold",
+    "summary": "Raspberry Pi 5 巡查机器人 MVP，提供 Web 控制台、仿真 robotd/visiond/harnessd、任务日志和真实硬件接入骨架。",
+    "capabilities": ["robot-console", "simulation-control", "task-harness", "vision-placeholder", "episode-log", "hardware-scaffold"],
+    "data_owner": "pi5_robot_episodes"
+  },
+  {
     "id": "future-systems",
     "name": "更多实控可视化系统",
     "public_url": "http://www.wangyutang.cn/modules/",

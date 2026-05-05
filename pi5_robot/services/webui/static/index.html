@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pi5 Robot Console</title>
+    <link rel="stylesheet" href="./static/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>Pi5 Robot Console</h1>
+          <p id="health">checking</p>
+        </div>
+        <button class="danger" id="stopBtn" title="急停/停止">■</button>
+      </header>
+
+      <section class="grid">
+        <div class="panel video">
+          <div class="panel-head">
+            <h2>Camera</h2>
+            <button id="captureBtn" title="拍照">●</button>
+          </div>
+          <pre id="visionBox">waiting for frame</pre>
+        </div>
+
+        <div class="panel controls">
+          <h2>Drive</h2>
+          <div class="pad">
+            <button data-move="forward" title="前进">↑</button>
+            <button data-rotate="-30" title="左转">↶</button>
+            <button id="softStopBtn" title="停止">■</button>
+            <button data-rotate="30" title="右转">↷</button>
+            <button data-move="backward" title="后退">↓</button>
+          </div>
+          <div class="servo-row">
+            <button data-servo-pan="-30" title="云台左转">←</button>
+            <button data-servo-tilt="15" title="云台上仰">↟</button>
+            <button data-servo-tilt="-15" title="云台下俯">↡</button>
+            <button data-servo-pan="30" title="云台右转">→</button>
+          </div>
+        </div>
+
+        <div class="panel state">
+          <h2>State</h2>
+          <dl>
+            <div><dt>Battery</dt><dd id="battery">--</dd></div>
+            <div><dt>Front</dt><dd id="front">--</dd></div>
+            <div><dt>Pose</dt><dd id="pose">--</dd></div>
+            <div><dt>Servo</dt><dd id="servo">--</dd></div>
+          </dl>
+        </div>
+
+        <div class="panel task">
+          <h2>Task</h2>
+          <textarea id="taskText">巡查门口区域，发现障碍物就停</textarea>
+          <button id="runTaskBtn">Run</button>
+          <pre id="taskBox">idle</pre>
+        </div>
+      </section>
+    </main>
+    <script src="./static/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+tools:
+  get_robot_state:
+    read_only: true
+
+  capture_image:
+    read_only: false
+
+  describe_scene:
+    read_only: true
+
+  move_forward:
+    max_distance_cm: 50
+    max_speed_mps: 0.3
+    require_clear_path: true
+    timeout_s: 5
+
+  move_backward:
+    max_distance_cm: 30
+    max_speed_mps: 0.2
+    timeout_s: 5
+
+  rotate:
+    max_angle_deg: 90
+    timeout_s: 5
+
+  stop:
+    always_allowed: true

@@ -1,0 +1,10 @@
+routes:
+  - id: doorway_mvp
+    name: 门口 MVP 巡查
+    waypoints:
+      - id: start
+        pose: [0.0, 0.0, 0]
+        actions: [capture_image, describe_scene]
+      - id: forward_check
+        pose: [0.3, 0.0, 0]
+        actions: [move_forward, capture_image, describe_scene]

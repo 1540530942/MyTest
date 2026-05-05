@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+uvicorn.out.log
+uvicorn.err.log
+
+episodes/*
+!episodes/.gitkeep

@@ -46,6 +46,20 @@ http://110.40.154.41 {
 	handle_path /web/* {
 		reverse_proxy web-manager:8092
 	}
+	handle /robot {
+		redir /robot/ 308
+	}
+	handle_path /robot/static/* {
+		rewrite * /static{path}
+		reverse_proxy pi5-robot:8093
+	}
+	handle_path /robot/api/* {
+		rewrite * /api{path}
+		reverse_proxy pi5-robot:8093
+	}
+	handle_path /robot/* {
+		reverse_proxy pi5-robot:8093
+	}
 	handle /llm {
 		redir /llm/ 308
 	}
@@ -95,6 +109,20 @@ http://www.wangyutang.cn {
 	handle_path /web/* {
 		reverse_proxy web-manager:8092
 	}
+	handle /robot {
+		redir /robot/ 308
+	}
+	handle_path /robot/static/* {
+		rewrite * /static{path}
+		reverse_proxy pi5-robot:8093
+	}
+	handle_path /robot/api/* {
+		rewrite * /api{path}
+		reverse_proxy pi5-robot:8093
+	}
+	handle_path /robot/* {
+		reverse_proxy pi5-robot:8093
+	}
 	handle /llm {
 		redir /llm/ 308
 	}
@@ -141,6 +169,20 @@ https://www.wangyutang.cn {
 	}
 	handle_path /web/* {
 		reverse_proxy web-manager:8092
+	}
+	handle /robot {
+		redir /robot/ 308
+	}
+	handle_path /robot/static/* {
+		rewrite * /static{path}
+		reverse_proxy pi5-robot:8093
+	}
+	handle_path /robot/api/* {
+		rewrite * /api{path}
+		reverse_proxy pi5-robot:8093
+	}
+	handle_path /robot/* {
+		reverse_proxy pi5-robot:8093
 	}
 	reverse_proxy platform:8098
 }

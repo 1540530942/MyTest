@@ -1,0 +1,12 @@
+safety:
+  emergency_stop_enabled: true
+  max_linear_speed_mps: 0.3
+  max_angular_speed_dps: 60
+  front_stop_distance_cm: 35
+  front_slow_distance_cm: 80
+  target_lost_timeout_s: 5
+  llm_timeout_s: 30
+  command_timeout_ms: 500
+  min_battery_percent_for_auto_task: 30
+  require_state_check_before_motion: true
+  allow_manual_override: true

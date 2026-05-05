@@ -1,0 +1,7 @@
+markers:
+  - id: marker_01
+    name: 起点
+    pose: [0.0, 0.0, 0]
+  - id: marker_02
+    name: 门口
+    pose: [1.0, 0.0, 0]

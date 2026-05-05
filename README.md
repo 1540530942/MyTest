@@ -13,6 +13,7 @@ This directory gathers the projects deployed behind `110.40.154.41` and the `wan
 | `remote_sensing/` | Executable scaffold for the remote-sensing module | `https://sensing.wangyutang.com/` |
 | `camera_snapshot/` | TurboPi / Raspberry Pi camera snapshot service | `https://camera.wangyutang.cn/` |
 | `llm_manager/` | Web Manager dashboard for module webpage status, development progress, and large-model API management | `http://www.wangyutang.cn/web/` |
+| `pi5_robot/` | Raspberry Pi 5 patrol robot MVP console, simulation robotd/visiond/harnessd, and hardware integration scaffold | `http://www.wangyutang.cn/robot/` |
 
 The original source directories were left in place. This workspace is the consolidated copy to use for deployment and day-to-day management.
 
@@ -48,6 +49,7 @@ http://127.0.0.1:8000/api/health    remote-control API
 http://127.0.0.1:8090/              remote-sensing scaffold
 http://127.0.0.1:8099/              camera snapshot service
 http://127.0.0.1:8092/              Web Manager
+http://127.0.0.1:8093/              Pi5 robot console
 http://127.0.0.1/api/health         Caddy gateway to platform, when port 80 is available
 ```
 
