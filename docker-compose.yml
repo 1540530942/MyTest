@@ -26,8 +26,6 @@ services:
         condition: service_started
       web-manager:
         condition: service_healthy
-      pi5-robot:
-        condition: service_healthy
     restart: unless-stopped
 
   platform:
