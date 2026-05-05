@@ -11,6 +11,8 @@ https://control.wangyutang.com
   -> remote.wangyutang.com   remote-control container group
   -> sensing.wangyutang.com  remote-sensing container group
   -> camera.wangyutang.cn    TurboPi camera snapshot module
+  -> www.wangyutang.cn/web   web-manager module dashboard
+  -> www.wangyutang.cn/robot Pi5 robot console
   -> registered future visual-control systems
 ```
 
@@ -32,6 +34,9 @@ Modules are addressed through a stable public route, preferably a subdomain
 | Remote Control | `remote.wangyutang.com` | web control, FastAPI command API, MQTT, edge bridge | local chain verified |
 | Remote Sensing | `sensing.wangyutang.com` | map/sensor imagery ingestion, timeline, visualization | scaffold |
 | Camera Snapshot | `camera.wangyutang.cn` | TurboPi/Raspberry Pi camera single-frame and continuous snapshot upload | local module ready |
+| Web Manager | `www.wangyutang.cn/web/` | module webpage supervision, development status, LLM provider management | ready |
+| Pi5 Robot | `www.wangyutang.cn/robot/` | Raspberry Pi 5 patrol robot MVP console and simulation harness | scaffold |
+| Pi SLAM | registry extension | Raspberry Pi / robot SLAM research placeholder | extension point |
 | Future Systems | registry-driven | more real-control visualization modules | extension point |
 
 ## Directory
@@ -100,6 +105,8 @@ control.wangyutang.com    future unified platform
 remote.wangyutang.com     remote control system
 sensing.wangyutang.com    remote sensing system
 camera.wangyutang.cn      TurboPi camera snapshots
+www.wangyutang.cn/web     web-manager module dashboard
+www.wangyutang.cn/robot   Pi5 robot console
 ```
 
 If only one public domain is desired later, use path routing only for modules that explicitly support a base path:

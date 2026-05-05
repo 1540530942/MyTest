@@ -14,6 +14,7 @@ This directory gathers the projects deployed behind `110.40.154.41` and the `wan
 | `camera_snapshot/` | TurboPi / Raspberry Pi camera snapshot service | `https://camera.wangyutang.cn/` |
 | `llm_manager/` | Web Manager dashboard for module webpage status, development progress, and large-model API management | `http://www.wangyutang.cn/web/` |
 | `pi5_robot/` | Raspberry Pi 5 patrol robot MVP console, simulation robotd/visiond/harnessd, and hardware integration scaffold | `http://www.wangyutang.cn/robot/` |
+| `pi_slam/` | Raspberry Pi / robot SLAM research placeholder; no runtime service yet | planned under module extensions |
 
 The original source directories were left in place. This workspace is the consolidated copy to use for deployment and day-to-day management.
 

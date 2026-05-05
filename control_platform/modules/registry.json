@@ -90,6 +90,21 @@
     "data_owner": "pi5_robot_episodes"
   },
   {
+    "id": "pi-slam",
+    "name": "Pi SLAM 预研模块",
+    "public_url": "http://www.wangyutang.cn/modules/",
+    "local_url": "http://127.0.0.1:8098/modules/",
+    "route_strategy": "extension-point + planned-runtime",
+    "path_prefix": "/modules/",
+    "service_url": "",
+    "health_url": "",
+    "image": "",
+    "status": "extension-point",
+    "summary": "Raspberry Pi / 机器人 SLAM、ROS 2、Nav2、LiDAR 或深度相机方向的预研占位模块，当前没有运行服务。",
+    "capabilities": ["slam-research", "ros2-planning", "nav2-planning", "mapping-placeholder"],
+    "data_owner": "pi_slam_future_data"
+  },
+  {
     "id": "future-systems",
     "name": "更多实控可视化系统",
     "public_url": "http://www.wangyutang.cn/modules/",
