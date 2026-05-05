@@ -20,6 +20,8 @@ The original source directories were left in place. This workspace is the consol
 
 Before adding or changing any module, follow [MODULE_MERGE_GUIDE.md](MODULE_MERGE_GUIDE.md). Every module merge must record the change and explicitly state which merge criteria have been satisfied.
 
+Current module compliance is recorded in [docs/module-compliance-audit.md](docs/module-compliance-audit.md).
+
 ## Run
 
 Create the local env file once:
