@@ -39,6 +39,19 @@ Modules are addressed through a stable public route, preferably a subdomain
 | Pi SLAM | registry extension | Raspberry Pi / robot SLAM research placeholder | extension point |
 | Future Systems | registry-driven | more real-control visualization modules | extension point |
 
+All runnable modules are also available through path routing on both primary gateway hosts:
+
+```text
+https://www.wangyutang.cn/papers/     http://110.40.154.41/papers/
+https://www.wangyutang.cn/remote/     http://110.40.154.41/remote/
+https://www.wangyutang.cn/sensing/    http://110.40.154.41/sensing/
+https://www.wangyutang.cn/camera/     http://110.40.154.41/camera/
+https://www.wangyutang.cn/web/        http://110.40.154.41/web/
+https://www.wangyutang.cn/llm/        http://110.40.154.41/llm/
+https://www.wangyutang.cn/robot/      http://110.40.154.41/robot/
+https://www.wangyutang.cn/modules/    http://110.40.154.41/modules/
+```
+
 ## Directory
 
 ```text

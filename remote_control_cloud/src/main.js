@@ -17,10 +17,13 @@ const storageKey = 'iot-control-settings';
 
 function defaultEndpoint() {
   const localHosts = new Set(['127.0.0.1', 'localhost']);
+  if (window.location.pathname === '/remote' || window.location.pathname.startsWith('/remote/')) {
+    return `${window.location.origin}/remote/devices/command`;
+  }
   if (localHosts.has(window.location.hostname)) {
     return `${window.location.protocol}//${window.location.hostname}:8000/devices/command`;
   }
-  return '';
+  return `${window.location.origin}/devices/command`;
 }
 
 function createRequestId() {
@@ -54,7 +57,8 @@ function getSettings() {
 
 function stateEndpoint(settings) {
   const endpoint = new URL(settings.endpoint);
-  endpoint.pathname = `/devices/${encodeURIComponent(settings.deviceId)}/state`;
+  const apiPrefix = endpoint.pathname.startsWith('/remote/') ? '/remote' : '';
+  endpoint.pathname = `${apiPrefix}/devices/${encodeURIComponent(settings.deviceId)}/state`;
   endpoint.search = '';
   endpoint.hash = '';
   return endpoint.toString();

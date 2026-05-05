@@ -6,15 +6,22 @@ This directory gathers the projects deployed behind `110.40.154.41` and the `wan
 
 | Path | Role | Public route |
 | --- | --- | --- |
-| `control_platform/` | Unified module portal and Caddy config | `http://110.40.154.41/`, `https://control.wangyutang.com/`, `https://www.wangyutang.cn/` |
-| `paper_learning_system/` | Paper learning and Hermes gateway | `https://papers.wangyutang.com/`, `/papers/` through the gateway |
-| `remote_control_cloud/` | Remote-control Vite UI, FastAPI command API, and MQTT config | `https://remote.wangyutang.com/` |
-| `remote_control_edge/` | PC/Arduino bridge, MQTT serial bridge, and PlatformIO firmware | local hardware side |
-| `remote_sensing/` | Executable scaffold for the remote-sensing module | `https://sensing.wangyutang.com/` |
-| `camera_snapshot/` | TurboPi / Raspberry Pi camera snapshot service | `https://camera.wangyutang.cn/` |
-| `llm_manager/` | Web Manager dashboard for module webpage status, development progress, and large-model API management | `http://www.wangyutang.cn/web/` |
-| `pi5_robot/` | Raspberry Pi 5 patrol robot MVP console, simulation robotd/visiond/harnessd, and hardware integration scaffold | `http://www.wangyutang.cn/robot/` |
-| `pi_slam/` | Raspberry Pi / robot SLAM research placeholder; no runtime service yet | planned under module extensions |
+| `control_platform/` | Unified module portal and Caddy config | `/` |
+| `paper_learning_system/` | Paper learning and Hermes gateway | `/papers/` |
+| `remote_control_cloud/` | Remote-control Vite UI, FastAPI command API, and MQTT config | `/remote/` |
+| `remote_control_edge/` | PC/Arduino bridge, MQTT serial bridge, and PlatformIO firmware | part of `/remote/`, local hardware side |
+| `remote_sensing/` | Executable scaffold for the remote-sensing module | `/sensing/` |
+| `camera_snapshot/` | TurboPi / Raspberry Pi camera snapshot service | `/camera/` |
+| `llm_manager/` | Web Manager dashboard for module webpage status, development progress, and large-model API management | `/web/`, `/llm/` |
+| `pi5_robot/` | Raspberry Pi 5 patrol robot MVP console, simulation robotd/visiond/harnessd, and hardware integration scaffold | `/robot/` |
+| `pi_slam/` | Raspberry Pi / robot SLAM research placeholder; no runtime service yet | `/modules/` extension entry |
+
+The path routes above are served from both gateway hosts:
+
+```text
+https://www.wangyutang.cn/<path>
+http://110.40.154.41/<path>
+```
 
 The original source directories were left in place. This workspace is the consolidated copy to use for deployment and day-to-day management.
 

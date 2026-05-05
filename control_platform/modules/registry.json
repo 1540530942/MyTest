@@ -2,7 +2,7 @@
   {
     "id": "paper-learning",
     "name": "论文学习系统",
-    "public_url": "http://www.wangyutang.cn/papers/",
+    "public_url": "https://www.wangyutang.cn/papers/",
     "local_url": "http://127.0.0.1:8088/",
     "route_strategy": "path-through-gateway",
     "path_prefix": "/papers/",
@@ -17,9 +17,9 @@
   {
     "id": "remote-control",
     "name": "远程遥控系统",
-    "public_url": "https://remote.wangyutang.com/",
+    "public_url": "https://www.wangyutang.cn/remote/",
     "local_url": "http://127.0.0.1:5173/",
-    "route_strategy": "subdomain-first + edge-bridge",
+    "route_strategy": "path-through-gateway + subdomain-first + edge-bridge",
     "path_prefix": "/remote/",
     "service_url": "http://remote-control-web:5173",
     "health_url": "http://remote-control-api:8000/api/health",
@@ -32,9 +32,9 @@
   {
     "id": "remote-sensing",
     "name": "遥感系统",
-    "public_url": "https://sensing.wangyutang.com/",
+    "public_url": "https://www.wangyutang.cn/sensing/",
     "local_url": "http://127.0.0.1:8090/",
-    "route_strategy": "subdomain-first + data-pipeline",
+    "route_strategy": "path-through-gateway + subdomain-first + data-pipeline",
     "path_prefix": "/sensing/",
     "service_url": "http://remote-sensing:8090",
     "health_url": "http://remote-sensing:8090/api/health",
@@ -62,7 +62,7 @@
   {
     "id": "web-manager",
     "name": "Web Manager 模块网页监督台",
-    "public_url": "http://www.wangyutang.cn/web/",
+    "public_url": "https://www.wangyutang.cn/web/",
     "local_url": "http://127.0.0.1:8092/",
     "route_strategy": "path-through-gateway + shared-api + ops-dashboard",
     "path_prefix": "/web/",
@@ -77,7 +77,7 @@
   {
     "id": "pi5-robot",
     "name": "Pi5 巡查机器人",
-    "public_url": "http://www.wangyutang.cn/robot/",
+    "public_url": "https://www.wangyutang.cn/robot/",
     "local_url": "http://127.0.0.1:8093/",
     "route_strategy": "path-through-gateway + hardware-simulation-first",
     "path_prefix": "/robot/",
@@ -92,7 +92,7 @@
   {
     "id": "pi-slam",
     "name": "Pi SLAM 预研模块",
-    "public_url": "http://www.wangyutang.cn/modules/",
+    "public_url": "https://www.wangyutang.cn/modules/",
     "local_url": "http://127.0.0.1:8098/modules/",
     "route_strategy": "extension-point + planned-runtime",
     "path_prefix": "/modules/",
@@ -107,7 +107,7 @@
   {
     "id": "future-systems",
     "name": "更多实控可视化系统",
-    "public_url": "http://www.wangyutang.cn/modules/",
+    "public_url": "https://www.wangyutang.cn/modules/",
     "local_url": "http://127.0.0.1:8098/modules/",
     "route_strategy": "registered-module",
     "path_prefix": "/modules/",
