@@ -47,7 +47,7 @@
   {
     "id": "camera-snapshot",
     "name": "TurboPi Camera Snapshot",
-    "public_url": "http://www.wangyutang.cn/camera/",
+    "public_url": "https://www.wangyutang.cn/camera/",
     "local_url": "http://127.0.0.1:8099/",
     "route_strategy": "path-through-gateway + edge-uploader",
     "path_prefix": "/camera/",
@@ -60,18 +60,18 @@
     "data_owner": "camera_snapshot_data"
   },
   {
-    "id": "llm-manager",
-    "name": "大模型接口管理",
-    "public_url": "http://www.wangyutang.cn/llm/",
+    "id": "web-manager",
+    "name": "Web Manager 模块网页监督台",
+    "public_url": "http://www.wangyutang.cn/web/",
     "local_url": "http://127.0.0.1:8092/",
-    "route_strategy": "path-through-gateway + shared-api",
-    "path_prefix": "/llm/",
-    "service_url": "http://llm-manager:8092",
-    "health_url": "http://llm-manager:8092/api/health",
-    "image": "llm-manager:local",
+    "route_strategy": "path-through-gateway + shared-api + ops-dashboard",
+    "path_prefix": "/web/",
+    "service_url": "http://web-manager:8092",
+    "health_url": "http://web-manager:8092/api/health",
+    "image": "web-manager:local",
     "status": "ready",
-    "summary": "统一管理大模型兼容接口、模型名称、API Key 来源，并向其他模块提供共享对话调用入口。",
-    "capabilities": ["llm-provider-management", "openai-compatible-chat", "shared-module-api", "chat-ui"],
+    "summary": "监督各模块网页与服务连接状态、当前开发进展和下一步计划，同时保留大模型兼容接口管理与共享对话入口。",
+    "capabilities": ["module-status-dashboard", "development-progress", "llm-provider-management", "openai-compatible-chat", "shared-module-api", "chat-ui"],
     "data_owner": "llm_manager_data"
   },
   {

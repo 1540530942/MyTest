@@ -12,9 +12,13 @@ This directory gathers the projects deployed behind `110.40.154.41` and the `wan
 | `remote_control_edge/` | PC/Arduino bridge, MQTT serial bridge, and PlatformIO firmware | local hardware side |
 | `remote_sensing/` | Executable scaffold for the remote-sensing module | `https://sensing.wangyutang.com/` |
 | `camera_snapshot/` | TurboPi / Raspberry Pi camera snapshot service | `https://camera.wangyutang.cn/` |
-| `llm_manager/` | Large-model API configuration, shared chat endpoint, and chat UI | `http://www.wangyutang.cn/llm/`, `https://llm.wangyutang.cn/` |
+| `llm_manager/` | Web Manager dashboard for module webpage status, development progress, and large-model API management | `http://www.wangyutang.cn/web/` |
 
 The original source directories were left in place. This workspace is the consolidated copy to use for deployment and day-to-day management.
+
+## Module Merge Guide
+
+Before adding or changing any module, follow [MODULE_MERGE_GUIDE.md](MODULE_MERGE_GUIDE.md). Every module merge must record the change and explicitly state which merge criteria have been satisfied.
 
 ## Run
 
@@ -41,7 +45,7 @@ http://127.0.0.1:5173/              remote-control web UI
 http://127.0.0.1:8000/api/health    remote-control API
 http://127.0.0.1:8090/              remote-sensing scaffold
 http://127.0.0.1:8099/              camera snapshot service
-http://127.0.0.1:8092/              LLM manager
+http://127.0.0.1:8092/              Web Manager
 http://127.0.0.1/api/health         Caddy gateway to platform, when port 80 is available
 ```
 

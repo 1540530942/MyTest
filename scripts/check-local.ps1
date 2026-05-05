@@ -7,7 +7,7 @@ $checks = @(
   @{ Name = "remote-api"; Url = "http://127.0.0.1:8000/api/health" },
   @{ Name = "remote-sensing"; Url = "http://127.0.0.1:8090/api/health" },
   @{ Name = "camera-snapshot"; Url = "http://127.0.0.1:8099/api/health" },
-  @{ Name = "llm-manager"; Url = "http://127.0.0.1:8092/api/health" },
+  @{ Name = "web-manager"; Url = "http://127.0.0.1:8092/api/health" },
   @{ Name = "gateway"; Url = "http://127.0.0.1/api/health" }
 )
 

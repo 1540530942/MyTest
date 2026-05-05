@@ -32,19 +32,33 @@ http://110.40.154.41 {
 	handle_path /camera/* {
 		reverse_proxy camera-snapshot:8099
 	}
+	handle /web {
+		redir /web/ 308
+	}
+	handle_path /web/static/* {
+		rewrite * /static{path}
+		reverse_proxy web-manager:8092
+	}
+	handle_path /web/api/* {
+		rewrite * /api{path}
+		reverse_proxy web-manager:8092
+	}
+	handle_path /web/* {
+		reverse_proxy web-manager:8092
+	}
 	handle /llm {
 		redir /llm/ 308
 	}
 	handle_path /llm/static/* {
 		rewrite * /static{path}
-		reverse_proxy llm-manager:8092
+		reverse_proxy web-manager:8092
 	}
 	handle_path /llm/api/* {
 		rewrite * /api{path}
-		reverse_proxy llm-manager:8092
+		reverse_proxy web-manager:8092
 	}
 	handle_path /llm/* {
-		reverse_proxy llm-manager:8092
+		reverse_proxy web-manager:8092
 	}
 	handle {
 		reverse_proxy platform:8098
@@ -67,39 +81,81 @@ http://www.wangyutang.cn {
 	handle_path /camera/* {
 		reverse_proxy camera-snapshot:8099
 	}
+	handle /web {
+		redir /web/ 308
+	}
+	handle_path /web/static/* {
+		rewrite * /static{path}
+		reverse_proxy web-manager:8092
+	}
+	handle_path /web/api/* {
+		rewrite * /api{path}
+		reverse_proxy web-manager:8092
+	}
+	handle_path /web/* {
+		reverse_proxy web-manager:8092
+	}
 	handle /llm {
 		redir /llm/ 308
 	}
 	handle_path /llm/static/* {
 		rewrite * /static{path}
-		reverse_proxy llm-manager:8092
+		reverse_proxy web-manager:8092
 	}
 	handle_path /llm/api/* {
 		rewrite * /api{path}
-		reverse_proxy llm-manager:8092
+		reverse_proxy web-manager:8092
 	}
 	handle_path /llm/* {
-		reverse_proxy llm-manager:8092
+		reverse_proxy web-manager:8092
 	}
 	reverse_proxy platform:8098
 }
 
-{$WWW_DOMAIN} {
+https://www.wangyutang.cn {
+	encode zstd gzip
+	handle /camera {
+		redir /camera/ 308
+	}
+	handle_path /camera/static/* {
+		rewrite * /static{path}
+		reverse_proxy camera-snapshot:8099
+	}
+	handle_path /camera/api/* {
+		rewrite * /api{path}
+		reverse_proxy camera-snapshot:8099
+	}
+	handle_path /camera/* {
+		reverse_proxy camera-snapshot:8099
+	}
+	handle /web {
+		redir /web/ 308
+	}
+	handle_path /web/static/* {
+		rewrite * /static{path}
+		reverse_proxy web-manager:8092
+	}
+	handle_path /web/api/* {
+		rewrite * /api{path}
+		reverse_proxy web-manager:8092
+	}
+	handle_path /web/* {
+		reverse_proxy web-manager:8092
+	}
+	reverse_proxy platform:8098
+}
+
+https://control.wangyutang.com {
 	encode zstd gzip
 	reverse_proxy platform:8098
 }
 
-{$PLATFORM_DOMAIN} {
-	encode zstd gzip
-	reverse_proxy platform:8098
-}
-
-{$PAPERS_DOMAIN} {
+https://papers.wangyutang.com {
 	encode zstd gzip
 	reverse_proxy paper-learning:8088
 }
 
-{$REMOTE_DOMAIN} {
+https://remote.wangyutang.com {
 	encode zstd gzip
 	handle_path /api/* {
 		reverse_proxy remote-control-api:8000
@@ -112,17 +168,17 @@ http://www.wangyutang.cn {
 	}
 }
 
-{$SENSING_DOMAIN} {
+https://sensing.wangyutang.com {
 	encode zstd gzip
 	reverse_proxy remote-sensing:8090
 }
 
-{$CAMERA_DOMAIN} {
+https://camera.wangyutang.cn {
 	encode zstd gzip
 	reverse_proxy camera-snapshot:8099
 }
 
-{$LLM_DOMAIN} {
+https://llm.wangyutang.cn {
 	encode zstd gzip
-	reverse_proxy llm-manager:8092
+	reverse_proxy web-manager:8092
 }

@@ -24,7 +24,7 @@ services:
         condition: service_healthy
       camera-snapshot:
         condition: service_started
-      llm-manager:
+      web-manager:
         condition: service_healthy
     restart: unless-stopped
 
@@ -188,20 +188,23 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  llm-manager:
-    image: ${LLM_MANAGER_IMAGE:-llm-manager:local}
+  web-manager:
+    image: ${WEB_MANAGER_IMAGE:-web-manager:local}
     build:
       context: ./llm_manager
       args:
         PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim}
         PIP_INDEX_URL: ${PIP_INDEX_URL:-}
-    container_name: llm-manager
+    container_name: web-manager
     env_file:
       - .env
+    environment:
+      WEB_MANAGER_REGISTRY_PATH: /app/control_platform/modules/registry.json
     ports:
       - "8092:8092"
     volumes:
       - llm_manager_data:/app/data
+      - ./control_platform/modules/registry.json:/app/control_platform/modules/registry.json:ro
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8092/api/health', timeout=3).read()"]
       interval: 30s

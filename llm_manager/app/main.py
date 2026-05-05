@@ -6,6 +6,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlparse, urlunparse
 
 import httpx
 from fastapi import FastAPI, HTTPException
@@ -17,6 +18,16 @@ from pydantic import BaseModel, Field, field_validator
 DATA_DIR = Path(os.getenv("LLM_MANAGER_DATA_DIR", "/app/data"))
 CONFIG_PATH = DATA_DIR / "providers.json"
 STATIC_DIR = Path(__file__).parent / "static"
+
+
+def default_registry_path() -> Path:
+    container_path = Path("/app/control_platform/modules/registry.json")
+    if container_path.exists():
+        return container_path
+    return Path(__file__).resolve().parents[2] / "control_platform" / "modules" / "registry.json"
+
+
+REGISTRY_PATH = Path(os.getenv("WEB_MANAGER_REGISTRY_PATH", default_registry_path()))
 
 
 def utc_now() -> str:
@@ -112,7 +123,25 @@ class ChatResponse(BaseModel):
     raw: dict | None = None
 
 
-app = FastAPI(title="LLM Manager", version="0.1.0")
+class ModuleStatus(BaseModel):
+    id: str
+    name: str
+    summary: str = ""
+    public_url: str = ""
+    local_url: str = ""
+    service_url: str = ""
+    health_url: str = ""
+    image: str = ""
+    status: str = ""
+    connection_state: Literal["online", "offline", "unknown", "not_configured"]
+    connection_detail: str = ""
+    current_progress: str = ""
+    next_step: str = ""
+    capabilities: list[str] = []
+    checked_at: str
+
+
+app = FastAPI(title="Web Manager", version="0.2.0")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
@@ -129,6 +158,94 @@ def save_providers(providers: list[Provider]) -> None:
     payload = [provider.model_dump() for provider in providers]
     with CONFIG_PATH.open("w", encoding="utf-8") as file:
         json.dump(payload, file, ensure_ascii=False, indent=2)
+
+
+def load_registry() -> list[dict]:
+    if not REGISTRY_PATH.exists():
+        return []
+    with REGISTRY_PATH.open("r", encoding="utf-8") as file:
+        data = json.load(file)
+    return data if isinstance(data, list) else []
+
+
+def module_health_url(module: dict) -> str:
+    health_url = str(module.get("health_url") or "")
+    local_url = str(module.get("local_url") or "").rstrip("/")
+    if not health_url or not local_url:
+        return health_url
+
+    if str(REGISTRY_PATH).startswith("/app/"):
+        return health_url
+
+    parsed_health = urlparse(health_url)
+    parsed_local = urlparse(local_url)
+    if parsed_health.path:
+        return urlunparse(
+            (
+                parsed_local.scheme,
+                parsed_local.netloc,
+                parsed_health.path,
+                "",
+                parsed_health.query,
+                "",
+            )
+        )
+    return f"{local_url}/api/health"
+
+
+def progress_text(status: str) -> tuple[str, str]:
+    mapping = {
+        "ready": ("已接入平台，可打开页面并进行健康检查。", "持续观察运行状态，并补充模块级能力说明。"),
+        "integration": ("正在集成，核心链路和服务边界仍在打通。", "完成服务健康检查、部署路由和端到端操作闭环。"),
+        "scaffold": ("已建立模块骨架，功能还在规划或初始实现阶段。", "补齐后端接口、前端页面和部署健康检查。"),
+        "extension-point": ("作为后续模块接入口，当前用于登记和规划。", "按优先级接入新的实控可视化模块。"),
+    }
+    return mapping.get(status, ("状态已登记，等待进一步细化。", "补充当前开发进展和下一步计划。"))
+
+
+async def check_module(module: dict) -> ModuleStatus:
+    checked_at = utc_now()
+    status = str(module.get("status") or "")
+    current_progress = str(module.get("current_progress") or "")
+    next_step = str(module.get("next_step") or "")
+    default_current, default_next = progress_text(status)
+    health_url = module_health_url(module)
+
+    connection_state: Literal["online", "offline", "unknown", "not_configured"] = "not_configured"
+    connection_detail = "未配置健康检查地址"
+    if health_url:
+        connection_state = "unknown"
+        connection_detail = "未检查"
+        try:
+            async with httpx.AsyncClient(timeout=2) as client:
+                response = await client.get(health_url)
+            if 200 <= response.status_code < 400:
+                connection_state = "online"
+                connection_detail = f"健康检查正常：HTTP {response.status_code}"
+            else:
+                connection_state = "offline"
+                connection_detail = f"健康检查异常：HTTP {response.status_code}"
+        except httpx.HTTPError as exc:
+            connection_state = "offline"
+            connection_detail = f"健康检查失败：{exc}"
+
+    return ModuleStatus(
+        id=str(module.get("id") or ""),
+        name=str(module.get("name") or ""),
+        summary=str(module.get("summary") or ""),
+        public_url=str(module.get("public_url") or ""),
+        local_url=str(module.get("local_url") or ""),
+        service_url=str(module.get("service_url") or ""),
+        health_url=str(module.get("health_url") or ""),
+        image=str(module.get("image") or ""),
+        status=status,
+        connection_state=connection_state,
+        connection_detail=connection_detail,
+        current_progress=current_progress or default_current,
+        next_step=next_step or default_next,
+        capabilities=list(module.get("capabilities") or []),
+        checked_at=checked_at,
+    )
 
 
 def public_provider(provider: Provider) -> ProviderOut:
@@ -176,7 +293,17 @@ def index() -> FileResponse:
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"status": "ok", "providers": len(load_providers())}
+    return {
+        "status": "ok",
+        "service": "web-manager",
+        "providers": len(load_providers()),
+        "modules": len(load_registry()),
+    }
+
+
+@app.get("/api/modules", response_model=list[ModuleStatus])
+async def list_modules() -> list[ModuleStatus]:
+    return [await check_module(module) for module in load_registry()]
 
 
 @app.get("/api/providers", response_model=list[ProviderOut])
