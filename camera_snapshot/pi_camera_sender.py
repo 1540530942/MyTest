@@ -4,6 +4,7 @@ import argparse
 import io
 import os
 import signal
+import subprocess
 import sys
 import time
 from dataclasses import dataclass
@@ -13,6 +14,7 @@ import requests
 
 DEFAULT_SERVER = os.environ.get("CAMERA_SNAPSHOT_SERVER", "http://127.0.0.1:8099")
 DEFAULT_TOKEN = os.environ.get("CAMERA_SNAPSHOT_TOKEN", "")
+DEFAULT_QUERY_GPIO = int(os.environ.get("CAMERA_SNAPSHOT_DEFAULT_GPIO", "26"))
 
 
 running = True
@@ -110,6 +112,55 @@ def fetch_control(session: requests.Session, server: str) -> dict[str, object]:
         return {"task": None}
 
 
+def normalize_gpio(value: object, default: int = DEFAULT_QUERY_GPIO) -> int:
+    try:
+        gpio = int(value)
+    except (TypeError, ValueError):
+        return default
+    if 0 <= gpio <= 53:
+        return gpio
+    return default
+
+
+def read_gpio_status(gpio: int) -> dict[str, object]:
+    sampled_at = time.time()
+    try:
+        result = subprocess.run(
+            ["pinctrl", "get", str(gpio)],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except FileNotFoundError:
+        return {
+            "available": False,
+            "gpio": gpio,
+            "source": "pinctrl",
+            "sampled_at": sampled_at,
+            "error": "pinctrl not found",
+        }
+    except Exception as exc:
+        return {"available": False, "gpio": gpio, "source": "pinctrl", "sampled_at": sampled_at, "error": str(exc)}
+
+    raw = result.stdout.strip()
+    parts = raw.split()
+    level = ""
+    for part in parts:
+        if part in {"hi", "lo"}:
+            level = part
+            break
+    return {
+        "available": bool(level),
+        "gpio": gpio,
+        "source": "pinctrl",
+        "level": level,
+        "value": 1 if level == "hi" else 0 if level == "lo" else None,
+        "sampled_at": sampled_at,
+        "raw": raw,
+    }
+
+
 def upload_frame(
     session: requests.Session,
     server: str,
@@ -118,6 +169,7 @@ def upload_frame(
     frame_id: int,
     task_id: str,
     jpeg: bytes,
+    gpio_status: dict[str, object],
 ) -> None:
     headers = {
         "Content-Type": "image/jpeg",
@@ -125,9 +177,42 @@ def upload_frame(
         "X-Frame-ID": str(frame_id),
         "X-Task-ID": task_id,
     }
+    if gpio_status:
+        headers["X-Gpio-Available"] = "1" if gpio_status.get("available") else "0"
+        headers["X-Gpio-Number"] = str(gpio_status.get("gpio") or "")
+        headers["X-Gpio-Level"] = str(gpio_status.get("level") or "")
+        value = gpio_status.get("value")
+        headers["X-Gpio-Value"] = "" if value is None else str(value)
+        headers["X-Gpio-Source"] = str(gpio_status.get("source") or "")
+        sampled_at = gpio_status.get("sampled_at")
+        headers["X-Gpio-Sampled-At"] = "" if sampled_at is None else str(sampled_at)
+        headers["X-Gpio-Raw"] = str(gpio_status.get("raw") or gpio_status.get("error") or "")[:300]
+        if gpio_status.get("gpio") == 16:
+            headers["X-Led1-Available"] = headers["X-Gpio-Available"]
+            headers["X-Led1-Gpio"] = headers["X-Gpio-Number"]
+            headers["X-Led1-Level"] = headers["X-Gpio-Level"]
+            headers["X-Led1-Value"] = headers["X-Gpio-Value"]
+            headers["X-Led1-Source"] = headers["X-Gpio-Source"]
+            headers["X-Led1-Sampled-At"] = headers["X-Gpio-Sampled-At"]
+            headers["X-Led1-Raw"] = headers["X-Gpio-Raw"]
     if token:
         headers["X-Camera-Token"] = token
     response = session.post(f"{server}/api/frame", headers=headers, data=jpeg, timeout=15)
+    response.raise_for_status()
+
+
+def upload_gpio_status(
+    session: requests.Session,
+    server: str,
+    token: str,
+    device_id: str,
+    gpio_status: dict[str, object],
+) -> None:
+    payload = {**gpio_status, "device_id": device_id}
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["X-Camera-Token"] = token
+    response = session.post(f"{server}/api/gpio", headers=headers, json=payload, timeout=5)
     response.raise_for_status()
 
 
@@ -146,16 +231,26 @@ def main() -> None:
 
     server = args.server.rstrip("/")
     session = requests.Session()
-    camera = build_camera(args)
-    print(f"[INFO] camera backend: {camera.name}", flush=True)
+    camera: CameraBackend | None = None
     print(f"[INFO] server: {server}", flush=True)
 
     frame_id = 0
     completed_tasks: set[str] = set()
+    last_gpio_upload_at = 0.0
     try:
         while running:
             control = fetch_control(session, server)
             task = control.get("task")
+            query_gpio = DEFAULT_QUERY_GPIO
+            if isinstance(task, dict):
+                query_gpio = normalize_gpio(task.get("query_gpio"))
+            now = time.time()
+            if now - last_gpio_upload_at >= 1.0:
+                try:
+                    upload_gpio_status(session, server, args.token, args.device_id, read_gpio_status(query_gpio))
+                    last_gpio_upload_at = now
+                except Exception as exc:
+                    print(f"[WARN] gpio status upload failed: {exc}", flush=True)
             if not isinstance(task, dict) or not task.get("id"):
                 time.sleep(max(args.idle_poll_ms, 250) / 1000)
                 continue
@@ -169,7 +264,11 @@ def main() -> None:
             interval_ms = int(task.get("interval_ms") or 0)
             deadline_at = float(task.get("deadline_at") or 0)
             uploaded = 0
-            print(f"[INFO] running task {task_id} mode={task.get('mode')} max_frames={max_frames}", flush=True)
+            print(
+                f"[INFO] running task {task_id} mode={task.get('mode')} "
+                f"max_frames={max_frames} query_gpio={query_gpio}",
+                flush=True,
+            )
 
             while running and (max_frames == 0 or uploaded < max_frames) and time.time() <= deadline_at:
                 latest_control = fetch_control(session, server)
@@ -181,8 +280,12 @@ def main() -> None:
 
                 frame_id += 1
                 try:
+                    if camera is None:
+                        camera = build_camera(args)
+                        print(f"[INFO] camera backend: {camera.name}", flush=True)
                     jpeg = camera.capture_jpeg()
-                    upload_frame(session, server, args.token, args.device_id, frame_id, task_id, jpeg)
+                    gpio_status = read_gpio_status(query_gpio)
+                    upload_frame(session, server, args.token, args.device_id, frame_id, task_id, jpeg, gpio_status)
                     uploaded += 1
                     total_label = "continuous" if max_frames == 0 else str(max_frames)
                     print(f"[ OK ] uploaded task {task_id} frame {uploaded}/{total_label}", flush=True)
@@ -194,7 +297,8 @@ def main() -> None:
             completed_tasks.add(task_id)
             time.sleep(max(args.idle_poll_ms, 250) / 1000)
     finally:
-        camera.close()
+        if camera is not None:
+            camera.close()
         print("[INFO] stopped", flush=True)
 
 

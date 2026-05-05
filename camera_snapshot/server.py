@@ -37,6 +37,36 @@ latest_meta = {
     "frame_id": "",
     "content_length": 0,
     "task_id": "",
+    "gpio": {
+        "available": False,
+        "gpio": 26,
+        "level": "",
+        "value": None,
+        "source": "",
+        "sampled_at": 0.0,
+        "raw": "",
+    },
+    "led1": {
+        "available": False,
+        "gpio": None,
+        "level": "",
+        "value": None,
+        "source": "",
+        "sampled_at": 0.0,
+        "raw": "",
+    },
+}
+
+gpio_status = {
+    "available": False,
+    "gpio": 26,
+    "level": "",
+    "value": None,
+    "source": "",
+    "sampled_at": 0.0,
+    "reported_at": 0.0,
+    "device_id": "",
+    "raw": "",
 }
 
 
@@ -65,6 +95,16 @@ def refresh_task_status() -> None:
         state["updated_at"] = time.time()
 
 
+def normalize_gpio(value: object, default: int = 26) -> int:
+    try:
+        gpio = int(value)
+    except (TypeError, ValueError):
+        return default
+    if 0 <= gpio <= 53:
+        return gpio
+    raise HTTPException(status_code=400, detail="query_gpio must be an integer from 0 to 53")
+
+
 @app.get("/")
 def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
@@ -81,9 +121,47 @@ def get_control() -> dict[str, object]:
     return dict(state)
 
 
+@app.get("/api/gpio")
+def latest_gpio() -> dict[str, object]:
+    return dict(gpio_status)
+
+
+@app.post("/api/gpio")
+async def upload_gpio_status(
+    payload: dict[str, object],
+    x_camera_token: Annotated[str | None, Header()] = None,
+) -> dict[str, object]:
+    require_token(x_camera_token)
+    gpio = normalize_gpio(payload.get("gpio"), 26)
+    value = payload.get("value")
+    level = str(payload.get("level") or "")
+    if value not in {0, 1, None}:
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            value = None
+    if value not in {0, 1}:
+        value = None
+    gpio_status.update(
+        {
+            "available": bool(payload.get("available")),
+            "gpio": gpio,
+            "level": level,
+            "value": value,
+            "source": str(payload.get("source") or ""),
+            "sampled_at": float(payload.get("sampled_at") or 0),
+            "reported_at": time.time(),
+            "device_id": str(payload.get("device_id") or ""),
+            "raw": str(payload.get("raw") or payload.get("error") or "")[:300],
+        }
+    )
+    return {"ok": True, "gpio": dict(gpio_status)}
+
+
 @app.post("/api/capture")
 def create_capture_task(payload: dict[str, object]) -> dict[str, object]:
     mode = str(payload.get("mode") or "single").strip().lower()
+    query_gpio = normalize_gpio(payload.get("query_gpio"), 26)
     now = time.time()
     if mode == "single":
         max_frames = 1
@@ -109,6 +187,7 @@ def create_capture_task(payload: dict[str, object]) -> dict[str, object]:
         "max_frames": max_frames,
         "uploaded_frames": 0,
         "interval_ms": interval_ms,
+        "query_gpio": query_gpio,
     }
     state["task"] = task
     state["updated_at"] = time.time()
@@ -130,6 +209,20 @@ async def upload_frame(
     x_device_id: Annotated[str, Header()] = "turbopi",
     x_frame_id: Annotated[str, Header()] = "",
     x_task_id: Annotated[str, Header()] = "",
+    x_gpio_available: Annotated[str | None, Header()] = None,
+    x_gpio_number: Annotated[str | None, Header()] = None,
+    x_gpio_level: Annotated[str | None, Header()] = None,
+    x_gpio_value: Annotated[str | None, Header()] = None,
+    x_gpio_source: Annotated[str | None, Header()] = None,
+    x_gpio_sampled_at: Annotated[str | None, Header()] = None,
+    x_gpio_raw: Annotated[str | None, Header()] = None,
+    x_led1_available: Annotated[str | None, Header()] = None,
+    x_led1_gpio: Annotated[str | None, Header()] = None,
+    x_led1_level: Annotated[str | None, Header()] = None,
+    x_led1_value: Annotated[str | None, Header()] = None,
+    x_led1_source: Annotated[str | None, Header()] = None,
+    x_led1_sampled_at: Annotated[str | None, Header()] = None,
+    x_led1_raw: Annotated[str | None, Header()] = None,
     x_camera_token: Annotated[str | None, Header()] = None,
 ) -> dict[str, object]:
     require_token(x_camera_token)
@@ -148,6 +241,35 @@ async def upload_frame(
     tmp_file.write_bytes(raw)
     tmp_file.replace(LATEST_IMAGE)
 
+    gpio_meta = {
+        "available": x_gpio_available == "1",
+        "gpio": int(x_gpio_number) if x_gpio_number and x_gpio_number.isdigit() else None,
+        "level": x_gpio_level or "",
+        "value": int(x_gpio_value) if x_gpio_value in {"0", "1"} else None,
+        "source": x_gpio_source or "",
+        "sampled_at": float(x_gpio_sampled_at) if x_gpio_sampled_at else 0.0,
+        "raw": x_gpio_raw or "",
+    }
+    if gpio_meta["gpio"] is None:
+        gpio_meta = {
+            "available": x_led1_available == "1",
+            "gpio": int(x_led1_gpio) if x_led1_gpio and x_led1_gpio.isdigit() else None,
+            "level": x_led1_level or "",
+            "value": int(x_led1_value) if x_led1_value in {"0", "1"} else None,
+            "source": x_led1_source or "",
+            "sampled_at": float(x_led1_sampled_at) if x_led1_sampled_at else 0.0,
+            "raw": x_led1_raw or "",
+        }
+    led1_meta = gpio_meta if gpio_meta.get("gpio") == 16 else {
+        "available": x_led1_available == "1",
+        "gpio": int(x_led1_gpio) if x_led1_gpio and x_led1_gpio.isdigit() else None,
+        "level": x_led1_level or "",
+        "value": int(x_led1_value) if x_led1_value in {"0", "1"} else None,
+        "source": x_led1_source or "",
+        "sampled_at": float(x_led1_sampled_at) if x_led1_sampled_at else 0.0,
+        "raw": x_led1_raw or "",
+    }
+
     latest_meta.update(
         {
             "has_image": True,
@@ -156,8 +278,11 @@ async def upload_frame(
             "frame_id": x_frame_id,
             "task_id": x_task_id,
             "content_length": len(raw),
+            "gpio": gpio_meta,
+            "led1": led1_meta,
         }
     )
+    gpio_status.update({**gpio_meta, "reported_at": time.time(), "device_id": x_device_id})
 
     task = state.get("task")
     if isinstance(task, dict) and x_task_id and x_task_id == task.get("id"):

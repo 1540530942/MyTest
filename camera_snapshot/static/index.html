@@ -34,6 +34,24 @@
           <option value="5000">0.2 fps</option>
         </select>
       </label>
+      <label class="field">
+        <span>查询 GPIO</span>
+        <select id="gpioSelect">
+          <option value="26" selected>GPIO26 LED2</option>
+          <option value="16">GPIO16 LED1</option>
+          <option value="13">GPIO13 KEY1</option>
+          <option value="23">GPIO23 KEY2</option>
+          <option value="4">GPIO4</option>
+          <option value="5">GPIO5</option>
+          <option value="6">GPIO6</option>
+          <option value="12">GPIO12</option>
+          <option value="17">GPIO17</option>
+          <option value="22">GPIO22</option>
+          <option value="24">GPIO24</option>
+          <option value="25">GPIO25</option>
+          <option value="27">GPIO27</option>
+        </select>
+      </label>
       <button id="refreshButton" type="button">刷新</button>
     </section>
 
@@ -42,6 +60,8 @@
       <div><span>帧 ID</span><strong id="frameId">-</strong></div>
       <div><span>更新时间</span><strong id="updatedAt">-</strong></div>
       <div><span>大小</span><strong id="contentLength">-</strong></div>
+      <div><span>引脚状态</span><strong id="gpioState">-</strong></div>
+      <div><span>采样时间</span><strong id="gpioSampledAt">-</strong></div>
       <div><span>任务</span><strong id="taskState">-</strong></div>
     </section>
   </main>
