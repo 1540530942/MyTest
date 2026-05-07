@@ -1,6 +1,7 @@
 const elements = {
   statusBadge: document.getElementById("statusBadge"),
   singleButton: document.getElementById("singleButton"),
+  screenshotButton: document.getElementById("screenshotButton"),
   continuousButton: document.getElementById("continuousButton"),
   intervalSelect: document.getElementById("intervalSelect"),
   gpioSelect: document.getElementById("gpioSelect"),
@@ -13,6 +14,7 @@ const elements = {
   contentLength: document.getElementById("contentLength"),
   gpioState: document.getElementById("gpioState"),
   gpioSampledAt: document.getElementById("gpioSampledAt"),
+  deviceOnline: document.getElementById("deviceOnline"),
   taskState: document.getElementById("taskState"),
 };
 
@@ -73,6 +75,25 @@ async function loadControl() {
     elements.taskState.textContent = "-";
     elements.continuousButton.textContent = "持续发送";
     elements.continuousButton.classList.remove("danger");
+  }
+}
+
+async function loadDeviceStatus() {
+  try {
+    const device = await getJson(apiPath("device"));
+    if (device.online) {
+      const label = device.device_id ? `${device.device_id} 在线` : "在线";
+      elements.deviceOnline.textContent = label;
+      elements.deviceOnline.dataset.mode = "ok";
+      return device;
+    }
+    elements.deviceOnline.textContent = device.last_seen_at ? "离线" : "未连接";
+    elements.deviceOnline.dataset.mode = "bad";
+    return device;
+  } catch (error) {
+    elements.deviceOnline.textContent = "状态未知";
+    elements.deviceOnline.dataset.mode = "bad";
+    return null;
   }
 }
 
@@ -142,6 +163,7 @@ async function waitForTaskFrame(taskId) {
 }
 
 elements.singleButton.addEventListener("click", () => createTask("single"));
+elements.screenshotButton.addEventListener("click", () => createTask("screenshot"));
 elements.continuousButton.addEventListener("click", async () => {
   const task = control.task;
   const activeContinuous = task && task.mode === "continuous" && !["complete", "expired", "stopped"].includes(task.status);
@@ -156,6 +178,7 @@ elements.refreshButton.addEventListener("click", () => refreshLatest(true));
 async function tick() {
   try {
     await loadControl();
+    await loadDeviceStatus();
   } catch (error) {
     setStatus("控制失败", "bad");
   }

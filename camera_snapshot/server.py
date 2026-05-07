@@ -19,6 +19,7 @@ STATE_FILE = DATA_DIR / "control_state.json"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 UPLOAD_TOKEN = secrets.compare_digest
+DEVICE_ONLINE_SECONDS = 10.0
 
 
 app = FastAPI(title="TurboPi Camera Snapshot", version="1.0.0")
@@ -105,6 +106,19 @@ def normalize_gpio(value: object, default: int = 26) -> int:
     raise HTTPException(status_code=400, detail="query_gpio must be an integer from 0 to 53")
 
 
+def device_status() -> dict[str, object]:
+    last_seen_at = float(gpio_status.get("reported_at") or latest_meta.get("updated_at") or 0)
+    age_seconds = time.time() - last_seen_at if last_seen_at else 0.0
+    device_id = str(gpio_status.get("device_id") or latest_meta.get("device_id") or "")
+    return {
+        "online": bool(last_seen_at and age_seconds <= DEVICE_ONLINE_SECONDS),
+        "device_id": device_id,
+        "last_seen_at": last_seen_at,
+        "age_seconds": age_seconds,
+        "online_threshold_seconds": DEVICE_ONLINE_SECONDS,
+    }
+
+
 @app.get("/")
 def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
@@ -112,7 +126,7 @@ def index() -> FileResponse:
 
 @app.get("/api/health")
 def health() -> dict[str, object]:
-    return {"status": "ok", "has_image": latest_meta["has_image"]}
+    return {"status": "ok", "has_image": latest_meta["has_image"], "device": device_status()}
 
 
 @app.get("/api/control")
@@ -124,6 +138,11 @@ def get_control() -> dict[str, object]:
 @app.get("/api/gpio")
 def latest_gpio() -> dict[str, object]:
     return dict(gpio_status)
+
+
+@app.get("/api/device")
+def latest_device() -> dict[str, object]:
+    return device_status()
 
 
 @app.post("/api/gpio")
@@ -163,7 +182,7 @@ def create_capture_task(payload: dict[str, object]) -> dict[str, object]:
     mode = str(payload.get("mode") or "single").strip().lower()
     query_gpio = normalize_gpio(payload.get("query_gpio"), 26)
     now = time.time()
-    if mode == "single":
+    if mode in {"single", "screenshot"}:
         max_frames = 1
         duration_seconds = 10
         interval_ms = 0
@@ -176,7 +195,7 @@ def create_capture_task(payload: dict[str, object]) -> dict[str, object]:
         max_frames = 0
         duration_seconds = 24 * 60 * 60
     else:
-        raise HTTPException(status_code=400, detail="mode must be single or continuous")
+        raise HTTPException(status_code=400, detail="mode must be single, screenshot, or continuous")
 
     task = {
         "id": f"{int(now * 1000)}-{secrets.token_hex(3)}",

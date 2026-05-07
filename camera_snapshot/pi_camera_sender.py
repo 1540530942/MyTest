@@ -7,7 +7,9 @@ import signal
 import subprocess
 import sys
 import time
+import tempfile
 from dataclasses import dataclass
+from pathlib import Path
 
 import requests
 
@@ -100,6 +102,34 @@ def build_camera(args: argparse.Namespace) -> CameraBackend:
         return OpenCvBackend(args.camera_index, args.width, args.height, args.quality)
 
     raise RuntimeError(f"unsupported backend: {args.backend}")
+
+
+def capture_screenshot_jpeg(quality: int) -> bytes:
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as handle:
+        output_path = Path(handle.name)
+    output_path.unlink(missing_ok=True)
+    try:
+        env = os.environ.copy()
+        env.setdefault("DISPLAY", ":0")
+        result = subprocess.run(
+            ["scrot", "-q", str(quality), str(output_path)],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            env=env,
+        )
+        data = output_path.read_bytes()
+        if not data:
+            raise RuntimeError("screen capture produced an empty file")
+        if not data.startswith(b"\xff\xd8"):
+            raise RuntimeError(f"screen capture was not JPEG: {result.stdout} {result.stderr}".strip())
+        return data
+    finally:
+        try:
+            output_path.unlink()
+        except FileNotFoundError:
+            pass
 
 
 def fetch_control(session: requests.Session, server: str) -> dict[str, object]:
@@ -263,9 +293,10 @@ def main() -> None:
             max_frames = int(task.get("max_frames") or 1)
             interval_ms = int(task.get("interval_ms") or 0)
             deadline_at = float(task.get("deadline_at") or 0)
+            mode = str(task.get("mode") or "single")
             uploaded = 0
             print(
-                f"[INFO] running task {task_id} mode={task.get('mode')} "
+                f"[INFO] running task {task_id} mode={mode} "
                 f"max_frames={max_frames} query_gpio={query_gpio}",
                 flush=True,
             )
@@ -280,10 +311,13 @@ def main() -> None:
 
                 frame_id += 1
                 try:
-                    if camera is None:
-                        camera = build_camera(args)
-                        print(f"[INFO] camera backend: {camera.name}", flush=True)
-                    jpeg = camera.capture_jpeg()
+                    if mode == "screenshot":
+                        jpeg = capture_screenshot_jpeg(args.quality)
+                    else:
+                        if camera is None:
+                            camera = build_camera(args)
+                            print(f"[INFO] camera backend: {camera.name}", flush=True)
+                        jpeg = camera.capture_jpeg()
                     gpio_status = read_gpio_status(query_gpio)
                     upload_frame(session, server, args.token, args.device_id, frame_id, task_id, jpeg, gpio_status)
                     uploaded += 1
@@ -291,6 +325,8 @@ def main() -> None:
                     print(f"[ OK ] uploaded task {task_id} frame {uploaded}/{total_label}", flush=True)
                 except Exception as exc:
                     print(f"[WARN] upload failed: {exc}", flush=True)
+                    if mode == "screenshot":
+                        break
                 if (max_frames == 0 or uploaded < max_frames) and interval_ms > 0:
                     time.sleep(max(interval_ms, 150) / 1000)
 

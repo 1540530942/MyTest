@@ -168,6 +168,14 @@ button.primary.danger {
   white-space: nowrap;
 }
 
+.meta strong[data-mode="ok"] {
+  color: var(--accent);
+}
+
+.meta strong[data-mode="bad"] {
+  color: var(--danger);
+}
+
 @media (max-width: 720px) {
   .meta {
     grid-template-columns: 1fr 1fr;
