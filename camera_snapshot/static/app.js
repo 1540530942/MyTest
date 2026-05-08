@@ -3,6 +3,7 @@ const elements = {
   singleButton: document.getElementById("singleButton"),
   screenshotButton: document.getElementById("screenshotButton"),
   continuousButton: document.getElementById("continuousButton"),
+  downloadButton: document.getElementById("downloadButton"),
   intervalSelect: document.getElementById("intervalSelect"),
   gpioSelect: document.getElementById("gpioSelect"),
   refreshButton: document.getElementById("refreshButton"),
@@ -20,6 +21,7 @@ const elements = {
 
 let control = { task: null };
 let lastUpdatedAt = 0;
+let latestMeta = null;
 
 function formatTime(seconds) {
   if (!seconds) return "-";
@@ -117,6 +119,22 @@ async function stopTask() {
   await loadControl();
 }
 
+function downloadLatestImage() {
+  if (!latestMeta || !latestMeta.has_image) {
+    setStatus("暂无图片", "warn");
+    return;
+  }
+  const timestamp = latestMeta.updated_at ? new Date(latestMeta.updated_at * 1000) : new Date();
+  const stamp = timestamp.toISOString().replace(/[:.]/g, "-");
+  const device = latestMeta.device_id || "turbopi";
+  const link = document.createElement("a");
+  link.href = `${apiPath("latest.jpg")}?download=${Date.now()}`;
+  link.download = `${device}-${stamp}.jpg`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
 async function refreshLatest(forceImage) {
   try {
     const [meta, gpioMeta] = await Promise.all([
@@ -128,9 +146,11 @@ async function refreshLatest(forceImage) {
       elements.emptyState.hidden = false;
       elements.cameraImage.hidden = true;
       applyGpioMeta(gpioMeta || meta.gpio || { gpio: selectedGpio(), available: false, sampled_at: 0 });
+      latestMeta = meta;
       return meta;
     }
 
+    latestMeta = meta;
     elements.deviceId.textContent = meta.device_id || "-";
     elements.frameId.textContent = meta.frame_id || "-";
     elements.updatedAt.textContent = formatTime(meta.updated_at);
@@ -164,6 +184,7 @@ async function waitForTaskFrame(taskId) {
 
 elements.singleButton.addEventListener("click", () => createTask("single"));
 elements.screenshotButton.addEventListener("click", () => createTask("screenshot"));
+elements.downloadButton.addEventListener("click", downloadLatestImage);
 elements.continuousButton.addEventListener("click", async () => {
   const task = control.task;
   const activeContinuous = task && task.mode === "continuous" && !["complete", "expired", "stopped"].includes(task.status);
