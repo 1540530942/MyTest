@@ -126,8 +126,9 @@ def capture_screenshot_jpeg(quality: int) -> bytes:
                 env=env,
             )
             from PIL import Image
+            from PIL import ImageDraw
 
-            Image.open(png_path).convert("RGB").save(jpg_path, "JPEG", quality=quality)
+            image = Image.open(png_path).convert("RGB")
         else:
             env.setdefault("DISPLAY", ":0")
             subprocess.run(
@@ -138,6 +139,24 @@ def capture_screenshot_jpeg(quality: int) -> bytes:
                 timeout=10,
                 env=env,
             )
+            from PIL import Image
+            from PIL import ImageDraw
+
+            image = Image.open(jpg_path).convert("RGB")
+        draw = ImageDraw.Draw(image)
+        label = time.strftime("Screenshot %Y-%m-%d %H:%M:%S")
+        text_box = draw.textbbox((0, 0), label)
+        text_width = text_box[2] - text_box[0]
+        text_height = text_box[3] - text_box[1]
+        padding = 10
+        x = 16
+        y = max(16, image.height - text_height - padding * 2 - 16)
+        draw.rectangle(
+            [x - padding, y - padding, x + text_width + padding, y + text_height + padding],
+            fill=(0, 0, 0),
+        )
+        draw.text((x, y), label, fill=(255, 255, 255))
+        image.save(jpg_path, "JPEG", quality=quality)
         data = jpg_path.read_bytes()
         if not data:
             raise RuntimeError("screen capture produced an empty file")
