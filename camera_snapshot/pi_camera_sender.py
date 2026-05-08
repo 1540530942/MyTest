@@ -105,31 +105,51 @@ def build_camera(args: argparse.Namespace) -> CameraBackend:
 
 
 def capture_screenshot_jpeg(quality: int) -> bytes:
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as handle:
+        png_path = Path(handle.name)
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as handle:
-        output_path = Path(handle.name)
-    output_path.unlink(missing_ok=True)
+        jpg_path = Path(handle.name)
+    png_path.unlink(missing_ok=True)
+    jpg_path.unlink(missing_ok=True)
     try:
         env = os.environ.copy()
-        env.setdefault("DISPLAY", ":0")
-        result = subprocess.run(
-            ["scrot", "-q", str(quality), str(output_path)],
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=10,
-            env=env,
-        )
-        data = output_path.read_bytes()
+        env.setdefault("XDG_RUNTIME_DIR", "/run/user/1000")
+        wayland_socket = next((path.name for path in Path(env["XDG_RUNTIME_DIR"]).glob("wayland-*")), "")
+        if wayland_socket:
+            env["WAYLAND_DISPLAY"] = wayland_socket
+            subprocess.run(
+                ["grim", str(png_path)],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                env=env,
+            )
+            from PIL import Image
+
+            Image.open(png_path).convert("RGB").save(jpg_path, "JPEG", quality=quality)
+        else:
+            env.setdefault("DISPLAY", ":0")
+            subprocess.run(
+                ["scrot", "-q", str(quality), str(jpg_path)],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                env=env,
+            )
+        data = jpg_path.read_bytes()
         if not data:
             raise RuntimeError("screen capture produced an empty file")
         if not data.startswith(b"\xff\xd8"):
-            raise RuntimeError(f"screen capture was not JPEG: {result.stdout} {result.stderr}".strip())
+            raise RuntimeError("screen capture was not JPEG")
         return data
     finally:
-        try:
-            output_path.unlink()
-        except FileNotFoundError:
-            pass
+        for path in (png_path, jpg_path):
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                pass
 
 
 def fetch_control(session: requests.Session, server: str) -> dict[str, object]:
