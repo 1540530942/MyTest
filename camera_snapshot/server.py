@@ -70,6 +70,23 @@ gpio_status = {
     "raw": "",
 }
 
+latest_inspection = {
+    "available": False,
+    "reported_at": 0.0,
+    "device_id": "",
+    "task_id": "",
+    "hostname": "",
+    "uptime": "",
+    "temperature_c": None,
+    "throttled": "",
+    "wifi_ssid": "",
+    "ip_address": "",
+    "gateway": "",
+    "disk": "",
+    "sender_service": "",
+    "load_average": "",
+}
+
 
 def require_token(x_camera_token: str | None) -> None:
     token_file = BASE_DIR / ".camera_token"
@@ -145,6 +162,11 @@ def latest_device() -> dict[str, object]:
     return device_status()
 
 
+@app.get("/api/inspection")
+def latest_inspection_status() -> dict[str, object]:
+    return dict(latest_inspection)
+
+
 @app.post("/api/gpio")
 async def upload_gpio_status(
     payload: dict[str, object],
@@ -177,14 +199,41 @@ async def upload_gpio_status(
     return {"ok": True, "gpio": dict(gpio_status)}
 
 
+@app.post("/api/inspection")
+async def upload_inspection(
+    payload: dict[str, object],
+    x_camera_token: Annotated[str | None, Header()] = None,
+) -> dict[str, object]:
+    require_token(x_camera_token)
+    latest_inspection.update(
+        {
+            "available": True,
+            "reported_at": time.time(),
+            "device_id": str(payload.get("device_id") or ""),
+            "task_id": str(payload.get("task_id") or ""),
+            "hostname": str(payload.get("hostname") or ""),
+            "uptime": str(payload.get("uptime") or ""),
+            "temperature_c": payload.get("temperature_c"),
+            "throttled": str(payload.get("throttled") or ""),
+            "wifi_ssid": str(payload.get("wifi_ssid") or ""),
+            "ip_address": str(payload.get("ip_address") or ""),
+            "gateway": str(payload.get("gateway") or ""),
+            "disk": str(payload.get("disk") or ""),
+            "sender_service": str(payload.get("sender_service") or ""),
+            "load_average": str(payload.get("load_average") or ""),
+        }
+    )
+    return {"ok": True, "inspection": dict(latest_inspection)}
+
+
 @app.post("/api/capture")
 def create_capture_task(payload: dict[str, object]) -> dict[str, object]:
     mode = str(payload.get("mode") or "single").strip().lower()
     query_gpio = normalize_gpio(payload.get("query_gpio"), 26)
     now = time.time()
-    if mode in {"single", "screenshot"}:
+    if mode in {"single", "screenshot", "inspect"}:
         max_frames = 1
-        duration_seconds = 10
+        duration_seconds = 20 if mode == "inspect" else 10
         interval_ms = 0
     elif mode == "continuous":
         try:
@@ -195,7 +244,7 @@ def create_capture_task(payload: dict[str, object]) -> dict[str, object]:
         max_frames = 0
         duration_seconds = 24 * 60 * 60
     else:
-        raise HTTPException(status_code=400, detail="mode must be single, screenshot, or continuous")
+        raise HTTPException(status_code=400, detail="mode must be single, screenshot, inspect, or continuous")
 
     task = {
         "id": f"{int(now * 1000)}-{secrets.token_hex(3)}",

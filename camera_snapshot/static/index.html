@@ -24,6 +24,7 @@
     <section class="controls">
       <button id="singleButton" class="primary" type="button">单帧发送</button>
       <button id="screenshotButton" type="button">截图上传</button>
+      <button id="inspectButton" type="button">巡检快照</button>
       <button id="continuousButton" type="button">持续发送</button>
       <button id="downloadButton" type="button">保存到本地</button>
       <label class="field">
@@ -67,7 +68,26 @@
       <div><span>树莓派</span><strong id="deviceOnline">-</strong></div>
       <div><span>任务</span><strong id="taskState">-</strong></div>
     </section>
+
+    <section class="inspection">
+      <div class="section-title">
+        <p class="eyebrow">Inspection</p>
+        <h2>远程巡检</h2>
+      </div>
+      <div class="inspection-grid">
+        <div><span>主机</span><strong id="inspectHost">-</strong></div>
+        <div><span>温度</span><strong id="inspectTemp">-</strong></div>
+        <div><span>电压</span><strong id="inspectThrottle">-</strong></div>
+        <div><span>Wi-Fi</span><strong id="inspectWifi">-</strong></div>
+        <div><span>IP</span><strong id="inspectIp">-</strong></div>
+        <div><span>网关</span><strong id="inspectGateway">-</strong></div>
+        <div><span>运行时间</span><strong id="inspectUptime">-</strong></div>
+        <div><span>磁盘</span><strong id="inspectDisk">-</strong></div>
+        <div><span>服务</span><strong id="inspectService">-</strong></div>
+        <div><span>负载</span><strong id="inspectLoad">-</strong></div>
+      </div>
+    </section>
   </main>
-  <script src="./static/app.js?v=20260508-download"></script>
+  <script src="./static/app.js?v=20260509-inspection"></script>
 </body>
 </html>

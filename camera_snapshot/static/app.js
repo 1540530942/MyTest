@@ -2,6 +2,7 @@ const elements = {
   statusBadge: document.getElementById("statusBadge"),
   singleButton: document.getElementById("singleButton"),
   screenshotButton: document.getElementById("screenshotButton"),
+  inspectButton: document.getElementById("inspectButton"),
   continuousButton: document.getElementById("continuousButton"),
   downloadButton: document.getElementById("downloadButton"),
   intervalSelect: document.getElementById("intervalSelect"),
@@ -17,6 +18,16 @@ const elements = {
   gpioSampledAt: document.getElementById("gpioSampledAt"),
   deviceOnline: document.getElementById("deviceOnline"),
   taskState: document.getElementById("taskState"),
+  inspectHost: document.getElementById("inspectHost"),
+  inspectTemp: document.getElementById("inspectTemp"),
+  inspectThrottle: document.getElementById("inspectThrottle"),
+  inspectWifi: document.getElementById("inspectWifi"),
+  inspectIp: document.getElementById("inspectIp"),
+  inspectGateway: document.getElementById("inspectGateway"),
+  inspectUptime: document.getElementById("inspectUptime"),
+  inspectDisk: document.getElementById("inspectDisk"),
+  inspectService: document.getElementById("inspectService"),
+  inspectLoad: document.getElementById("inspectLoad"),
 };
 
 let control = { task: null };
@@ -64,6 +75,30 @@ function applyGpioMeta(gpioMeta) {
   elements.gpioSampledAt.textContent = gpioMeta && gpioMeta.sampled_at ? formatTime(gpioMeta.sampled_at) : "-";
 }
 
+function setInspectionValue(element, value, mode = "") {
+  element.textContent = value || "-";
+  if (mode) {
+    element.dataset.mode = mode;
+  } else {
+    delete element.dataset.mode;
+  }
+}
+
+function clearInspection() {
+  [
+    elements.inspectHost,
+    elements.inspectTemp,
+    elements.inspectThrottle,
+    elements.inspectWifi,
+    elements.inspectIp,
+    elements.inspectGateway,
+    elements.inspectUptime,
+    elements.inspectDisk,
+    elements.inspectService,
+    elements.inspectLoad,
+  ].forEach((element) => setInspectionValue(element, "-"));
+}
+
 async function loadControl() {
   control = await getJson(apiPath("control"));
   const task = control.task;
@@ -99,6 +134,35 @@ async function loadDeviceStatus() {
   }
 }
 
+async function loadInspection() {
+  try {
+    const inspection = await getJson(apiPath("inspection"));
+    if (!inspection.available) {
+      clearInspection();
+      return inspection;
+    }
+    const temp = Number(inspection.temperature_c);
+    const tempLabel = Number.isFinite(temp) ? `${temp.toFixed(1)}°C` : "-";
+    const throttled = inspection.throttled || "-";
+    const throttleOk = typeof throttled === "string" && throttled.includes("0x0");
+    const service = inspection.sender_service || "-";
+    setInspectionValue(elements.inspectHost, inspection.hostname);
+    setInspectionValue(elements.inspectTemp, tempLabel, Number.isFinite(temp) && temp < 70 ? "ok" : "warn");
+    setInspectionValue(elements.inspectThrottle, throttleOk ? "正常" : throttled, throttleOk ? "ok" : "warn");
+    setInspectionValue(elements.inspectWifi, inspection.wifi_ssid);
+    setInspectionValue(elements.inspectIp, inspection.ip_address);
+    setInspectionValue(elements.inspectGateway, inspection.gateway);
+    setInspectionValue(elements.inspectUptime, inspection.uptime);
+    setInspectionValue(elements.inspectDisk, inspection.disk);
+    setInspectionValue(elements.inspectService, service, service === "active" ? "ok" : "bad");
+    setInspectionValue(elements.inspectLoad, inspection.load_average);
+    return inspection;
+  } catch (error) {
+    clearInspection();
+    return null;
+  }
+}
+
 async function createTask(mode, extra = {}) {
   applyGpioMeta({ gpio: selectedGpio(), available: false, sampled_at: 0 });
   const result = await getJson(apiPath("capture"), {
@@ -107,8 +171,9 @@ async function createTask(mode, extra = {}) {
     body: JSON.stringify({ mode, query_gpio: selectedGpio(), ...extra }),
   });
   await loadControl();
-  if (["single", "screenshot"].includes(mode) && result.task && result.task.id) {
+  if (["single", "screenshot", "inspect"].includes(mode) && result.task && result.task.id) {
     await waitForTaskFrame(result.task.id);
+    await loadInspection();
   } else {
     await refreshLatest(false);
   }
@@ -174,7 +239,7 @@ async function refreshLatest(forceImage) {
 }
 
 async function waitForTaskFrame(taskId) {
-  const deadline = Date.now() + 12000;
+  const deadline = Date.now() + 15000;
   while (Date.now() < deadline) {
     const meta = await refreshLatest(false);
     if (meta && meta.task_id === taskId) return;
@@ -184,6 +249,7 @@ async function waitForTaskFrame(taskId) {
 
 elements.singleButton.addEventListener("click", () => createTask("single"));
 elements.screenshotButton.addEventListener("click", () => createTask("screenshot"));
+elements.inspectButton.addEventListener("click", () => createTask("inspect"));
 elements.downloadButton.addEventListener("click", downloadLatestImage);
 elements.continuousButton.addEventListener("click", async () => {
   const task = control.task;
@@ -200,6 +266,7 @@ async function tick() {
   try {
     await loadControl();
     await loadDeviceStatus();
+    await loadInspection();
   } catch (error) {
     setStatus("控制失败", "bad");
   }

@@ -30,7 +30,8 @@ body {
 
 .topbar,
 .controls,
-.meta {
+.meta,
+.inspection-grid {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -152,37 +153,67 @@ button.primary.danger {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
-.meta div {
+.inspection {
+  margin-top: 18px;
+}
+
+.section-title {
+  margin-bottom: 10px;
+}
+
+.section-title h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.inspection-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.meta div,
+.inspection-grid div {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 12px;
   background: var(--panel);
 }
 
-.meta span {
+.meta span,
+.inspection-grid span {
   display: block;
   margin-bottom: 5px;
   color: var(--muted);
   font-size: 13px;
 }
 
-.meta strong {
+.meta strong,
+.inspection-grid strong {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.meta strong[data-mode="ok"] {
+.meta strong[data-mode="ok"],
+.inspection-grid strong[data-mode="ok"] {
   color: var(--accent);
 }
 
-.meta strong[data-mode="bad"] {
+.meta strong[data-mode="warn"],
+.inspection-grid strong[data-mode="warn"] {
+  color: var(--warn);
+}
+
+.meta strong[data-mode="bad"],
+.inspection-grid strong[data-mode="bad"] {
   color: var(--danger);
 }
 
 @media (max-width: 720px) {
-  .meta {
+  .meta,
+  .inspection-grid {
     grid-template-columns: 1fr 1fr;
   }
 }

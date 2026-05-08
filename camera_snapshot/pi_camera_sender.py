@@ -181,6 +181,47 @@ def fetch_control(session: requests.Session, server: str) -> dict[str, object]:
         return {"task": None}
 
 
+def run_text(command: list[str], timeout: float = 3.0) -> str:
+    try:
+        result = subprocess.run(command, check=False, capture_output=True, text=True, timeout=timeout)
+        return (result.stdout or result.stderr).strip()
+    except Exception as exc:
+        return f"{exc.__class__.__name__}: {exc}"
+
+
+def collect_inspection(device_id: str, task_id: str) -> dict[str, object]:
+    hostname = run_text(["hostname"])
+    uptime = run_text(["uptime", "-p"])
+    throttled = run_text(["vcgencmd", "get_throttled"])
+    temp_raw = run_text(["vcgencmd", "measure_temp"])
+    temperature_c = None
+    if temp_raw.startswith("temp="):
+        try:
+            temperature_c = float(temp_raw.split("=", 1)[1].split("'")[0])
+        except ValueError:
+            temperature_c = None
+    wifi_ssid = run_text(["iwgetid", "-r"])
+    ip_address = run_text(["sh", "-lc", "ip -4 -o addr show wlan0 | awk '{print $4}' | head -1"])
+    gateway = run_text(["sh", "-lc", "ip route | awk '/^default/ {print $3; exit}'"])
+    disk = run_text(["sh", "-lc", "df -h / | awk 'NR==2 {print $5 \" used, \" $4 \" free\"}'"])
+    sender_service = run_text(["systemctl", "is-active", "camera-snapshot-sender.service"])
+    load_average = run_text(["sh", "-lc", "cut -d' ' -f1-3 /proc/loadavg"])
+    return {
+        "device_id": device_id,
+        "task_id": task_id,
+        "hostname": hostname,
+        "uptime": uptime,
+        "temperature_c": temperature_c,
+        "throttled": throttled,
+        "wifi_ssid": wifi_ssid,
+        "ip_address": ip_address,
+        "gateway": gateway,
+        "disk": disk,
+        "sender_service": sender_service,
+        "load_average": load_average,
+    }
+
+
 def normalize_gpio(value: object, default: int = DEFAULT_QUERY_GPIO) -> int:
     try:
         gpio = int(value)
@@ -285,6 +326,19 @@ def upload_gpio_status(
     response.raise_for_status()
 
 
+def upload_inspection(
+    session: requests.Session,
+    server: str,
+    token: str,
+    inspection: dict[str, object],
+) -> None:
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["X-Camera-Token"] = token
+    response = session.post(f"{server}/api/inspection", headers=headers, json=inspection, timeout=8)
+    response.raise_for_status()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Upload Raspberry Pi camera snapshots to the cloud dashboard.")
     parser.add_argument("--server", default=DEFAULT_SERVER, help="Camera snapshot server base URL.")
@@ -350,7 +404,7 @@ def main() -> None:
 
                 frame_id += 1
                 try:
-                    if mode == "screenshot":
+                    if mode in {"screenshot", "inspect"}:
                         jpeg = capture_screenshot_jpeg(args.quality)
                     else:
                         if camera is None:
@@ -358,13 +412,20 @@ def main() -> None:
                             print(f"[INFO] camera backend: {camera.name}", flush=True)
                         jpeg = camera.capture_jpeg()
                     gpio_status = read_gpio_status(query_gpio)
+                    if mode == "inspect":
+                        upload_inspection(
+                            session,
+                            server,
+                            args.token,
+                            collect_inspection(args.device_id, task_id),
+                        )
                     upload_frame(session, server, args.token, args.device_id, frame_id, task_id, jpeg, gpio_status)
                     uploaded += 1
                     total_label = "continuous" if max_frames == 0 else str(max_frames)
                     print(f"[ OK ] uploaded task {task_id} frame {uploaded}/{total_label}", flush=True)
                 except Exception as exc:
                     print(f"[WARN] upload failed: {exc}", flush=True)
-                    if mode == "screenshot":
+                    if mode in {"screenshot", "inspect"}:
                         break
                 if (max_frames == 0 or uploaded < max_frames) and interval_ms > 0:
                     time.sleep(max(interval_ms, 150) / 1000)
