@@ -105,7 +105,7 @@ async function createTask(mode, extra = {}) {
     body: JSON.stringify({ mode, query_gpio: selectedGpio(), ...extra }),
   });
   await loadControl();
-  if (mode === "single" && result.task && result.task.id) {
+  if (["single", "screenshot"].includes(mode) && result.task && result.task.id) {
     await waitForTaskFrame(result.task.id);
   } else {
     await refreshLatest(false);

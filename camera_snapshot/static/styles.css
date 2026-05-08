@@ -91,6 +91,11 @@ h1 {
   display: block;
 }
 
+.viewer img[hidden],
+.empty[hidden] {
+  display: none;
+}
+
 .empty {
   position: absolute;
   inset: 0;
