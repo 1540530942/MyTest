@@ -33,6 +33,8 @@ const elements = {
 let control = { task: null };
 let lastUpdatedAt = 0;
 let latestMeta = null;
+let tickRunning = false;
+let focusedTaskId = "";
 
 function formatTime(seconds) {
   if (!seconds) return "-";
@@ -97,6 +99,12 @@ function clearInspection() {
     elements.inspectService,
     elements.inspectLoad,
   ].forEach((element) => setInspectionValue(element, "-"));
+}
+
+function setTaskButtonsBusy(isBusy) {
+  elements.singleButton.disabled = isBusy;
+  elements.screenshotButton.disabled = isBusy;
+  elements.inspectButton.disabled = isBusy;
 }
 
 async function loadControl() {
@@ -164,18 +172,25 @@ async function loadInspection() {
 }
 
 async function createTask(mode, extra = {}) {
+  setTaskButtonsBusy(mode !== "continuous");
   applyGpioMeta({ gpio: selectedGpio(), available: false, sampled_at: 0 });
-  const result = await getJson(apiPath("capture"), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ mode, query_gpio: selectedGpio(), ...extra }),
-  });
-  await loadControl();
-  if (["single", "screenshot", "inspect"].includes(mode) && result.task && result.task.id) {
-    await waitForTaskFrame(result.task.id);
-    await loadInspection();
-  } else {
-    await refreshLatest(false);
+  setStatus("任务已下发", "warn");
+  try {
+    const result = await getJson(apiPath("capture"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode, query_gpio: selectedGpio(), ...extra }),
+    });
+    await loadControl();
+    if (["single", "screenshot", "inspect"].includes(mode) && result.task && result.task.id) {
+      focusedTaskId = result.task.id;
+      await waitForTaskFrame(result.task.id);
+      await loadInspection();
+    } else {
+      await refreshLatest(true);
+    }
+  } finally {
+    setTaskButtonsBusy(false);
   }
 }
 
@@ -239,12 +254,19 @@ async function refreshLatest(forceImage) {
 }
 
 async function waitForTaskFrame(taskId) {
-  const deadline = Date.now() + 15000;
+  const deadline = Date.now() + 20000;
   while (Date.now() < deadline) {
-    const meta = await refreshLatest(false);
-    if (meta && meta.task_id === taskId) return;
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await loadControl().catch(() => null);
+    const meta = await refreshLatest(true);
+    if (meta && meta.task_id === taskId) {
+      focusedTaskId = "";
+      setStatus("已更新", "ok");
+      return meta;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 300));
   }
+  setStatus("等待上传超时", "warn");
+  return null;
 }
 
 elements.singleButton.addEventListener("click", () => createTask("single"));
@@ -263,15 +285,19 @@ elements.continuousButton.addEventListener("click", async () => {
 elements.refreshButton.addEventListener("click", () => refreshLatest(true));
 
 async function tick() {
+  if (tickRunning) return;
+  tickRunning = true;
   try {
     await loadControl();
     await loadDeviceStatus();
     await loadInspection();
+    await refreshLatest(Boolean(focusedTaskId));
   } catch (error) {
     setStatus("控制失败", "bad");
+  } finally {
+    tickRunning = false;
   }
-  await refreshLatest(false);
 }
 
 tick();
-setInterval(tick, 1000);
+setInterval(tick, 800);

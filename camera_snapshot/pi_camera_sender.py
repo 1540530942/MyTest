@@ -112,6 +112,37 @@ class WebVideoServerBackend(CameraBackend):
         self.session.close()
 
 
+def stamp_image(image: object, label: str, quality: int) -> bytes:
+    from PIL import ImageDraw
+
+    image = image.convert("RGB")
+    draw = ImageDraw.Draw(image)
+    text_box = draw.textbbox((0, 0), label)
+    text_width = text_box[2] - text_box[0]
+    text_height = text_box[3] - text_box[1]
+    padding = 10
+    x = 16
+    y = max(16, image.height - text_height - padding * 2 - 16)
+    draw.rectangle(
+        [x - padding, y - padding, x + text_width + padding, y + text_height + padding],
+        fill=(0, 0, 0),
+    )
+    draw.text((x, y), label, fill=(255, 255, 255))
+    stream = io.BytesIO()
+    image.save(stream, "JPEG", quality=quality)
+    data = stream.getvalue()
+    if not data.startswith(b"\xff\xd8"):
+        raise RuntimeError("watermarked image was not JPEG")
+    return data
+
+
+def stamp_jpeg(jpeg: bytes, label_prefix: str, quality: int) -> bytes:
+    from PIL import Image
+
+    label = time.strftime(f"{label_prefix} %Y-%m-%d %H:%M:%S")
+    return stamp_image(Image.open(io.BytesIO(jpeg)), label, quality)
+
+
 def build_camera(args: argparse.Namespace) -> CameraBackend:
     if args.backend in {"auto", "web-video-server"}:
         try:
@@ -174,21 +205,8 @@ def capture_screenshot_jpeg(quality: int) -> bytes:
             from PIL import ImageDraw
 
             image = Image.open(jpg_path).convert("RGB")
-        draw = ImageDraw.Draw(image)
         label = time.strftime("Screenshot %Y-%m-%d %H:%M:%S")
-        text_box = draw.textbbox((0, 0), label)
-        text_width = text_box[2] - text_box[0]
-        text_height = text_box[3] - text_box[1]
-        padding = 10
-        x = 16
-        y = max(16, image.height - text_height - padding * 2 - 16)
-        draw.rectangle(
-            [x - padding, y - padding, x + text_width + padding, y + text_height + padding],
-            fill=(0, 0, 0),
-        )
-        draw.text((x, y), label, fill=(255, 255, 255))
-        image.save(jpg_path, "JPEG", quality=quality)
-        data = jpg_path.read_bytes()
+        data = stamp_image(image, label, quality)
         if not data:
             raise RuntimeError("screen capture produced an empty file")
         if not data.startswith(b"\xff\xd8"):
@@ -448,6 +466,7 @@ def main() -> None:
                             camera = build_camera(args)
                             print(f"[INFO] camera backend: {camera.name}", flush=True)
                         jpeg = camera.capture_jpeg()
+                        jpeg = stamp_jpeg(jpeg, "Camera", args.quality)
                     gpio_status = read_gpio_status(query_gpio)
                     if mode == "inspect":
                         upload_inspection(
