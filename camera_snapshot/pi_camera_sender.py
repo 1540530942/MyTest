@@ -89,7 +89,38 @@ class OpenCvBackend(CameraBackend):
         self.cap.release()
 
 
+class WebVideoServerBackend(CameraBackend):
+    def __init__(self, snapshot_url: str, timeout: float) -> None:
+        super().__init__("web-video-server")
+        self.snapshot_url = snapshot_url
+        self.timeout = timeout
+        self.session = requests.Session()
+        self.capture_jpeg()
+
+    def capture_jpeg(self) -> bytes:
+        response = self.session.get(self.snapshot_url, timeout=self.timeout)
+        response.raise_for_status()
+        content_type = response.headers.get("content-type", "").lower()
+        data = response.content
+        if "image/jpeg" not in content_type and "image/jpg" not in content_type:
+            raise RuntimeError(f"snapshot endpoint returned {content_type or 'unknown content type'}")
+        if not data.startswith(b"\xff\xd8"):
+            raise RuntimeError("snapshot endpoint did not return JPEG data")
+        return data
+
+    def close(self) -> None:
+        self.session.close()
+
+
 def build_camera(args: argparse.Namespace) -> CameraBackend:
+    if args.backend in {"auto", "web-video-server"}:
+        try:
+            return WebVideoServerBackend(args.web_video_snapshot_url, args.web_video_timeout)
+        except Exception as exc:
+            if args.backend == "web-video-server":
+                raise
+            print(f"[WARN] web_video_server unavailable: {exc}", flush=True)
+
     if args.backend in {"auto", "picamera2"}:
         try:
             return Picamera2Backend(args.width, args.height, args.quality)
@@ -344,7 +375,13 @@ def main() -> None:
     parser.add_argument("--server", default=DEFAULT_SERVER, help="Camera snapshot server base URL.")
     parser.add_argument("--token", default=DEFAULT_TOKEN, help="Optional upload token matching .camera_token on server.")
     parser.add_argument("--device-id", default=os.environ.get("CAMERA_DEVICE_ID", "turbopi"))
-    parser.add_argument("--backend", choices=["auto", "picamera2", "opencv"], default="auto")
+    parser.add_argument("--backend", choices=["auto", "web-video-server", "picamera2", "opencv"], default="auto")
+    parser.add_argument(
+        "--web-video-snapshot-url",
+        default=os.environ.get("CAMERA_WEB_VIDEO_SNAPSHOT_URL", "http://127.0.0.1:8080/snapshot?topic=/image_raw"),
+        help="web_video_server snapshot URL for an already-running ROS camera stream.",
+    )
+    parser.add_argument("--web-video-timeout", type=float, default=8.0)
     parser.add_argument("--camera-index", type=int, default=0)
     parser.add_argument("--width", type=int, default=640)
     parser.add_argument("--height", type=int, default=480)
