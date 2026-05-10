@@ -70,11 +70,25 @@ class OpenCvBackend(CameraBackend):
 
         self.cv2 = cv2
         self.quality = quality
-        self.cap = cv2.VideoCapture(camera_index)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
-        if not self.cap.isOpened():
-            raise RuntimeError(f"could not open camera index {camera_index}")
+        self.camera_index = camera_index
+        self.cap = None
+        candidates = [camera_index] + [idx for idx in range(0, 6) if idx != camera_index]
+        for candidate in candidates:
+            cap = cv2.VideoCapture(candidate)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+            if not cap.isOpened():
+                cap.release()
+                continue
+            ok, frame = cap.read()
+            if ok and frame is not None:
+                self.camera_index = candidate
+                self.cap = cap
+                print(f"[INFO] opencv camera index: {candidate}", flush=True)
+                break
+            cap.release()
+        if self.cap is None:
+            raise RuntimeError(f"could not open a camera near index {camera_index}")
 
     def capture_jpeg(self) -> bytes:
         ok, frame = self.cap.read()
@@ -86,7 +100,8 @@ class OpenCvBackend(CameraBackend):
         return encoded.tobytes()
 
     def close(self) -> None:
-        self.cap.release()
+        if self.cap is not None:
+            self.cap.release()
 
 
 class WebVideoServerBackend(CameraBackend):
@@ -152,6 +167,14 @@ def build_camera(args: argparse.Namespace) -> CameraBackend:
                 raise
             print(f"[WARN] web_video_server unavailable: {exc}", flush=True)
 
+    if args.backend in {"auto", "opencv"}:
+        try:
+            return OpenCvBackend(args.camera_index, args.width, args.height, args.quality)
+        except Exception as exc:
+            if args.backend == "opencv":
+                raise
+            print(f"[WARN] opencv unavailable: {exc}", flush=True)
+
     if args.backend in {"auto", "picamera2"}:
         try:
             return Picamera2Backend(args.width, args.height, args.quality)
@@ -159,9 +182,6 @@ def build_camera(args: argparse.Namespace) -> CameraBackend:
             if args.backend == "picamera2":
                 raise
             print(f"[WARN] picamera2 unavailable: {exc}", flush=True)
-
-    if args.backend in {"auto", "opencv"}:
-        return OpenCvBackend(args.camera_index, args.width, args.height, args.quality)
 
     raise RuntimeError(f"unsupported backend: {args.backend}")
 
@@ -399,7 +419,7 @@ def main() -> None:
         default=os.environ.get("CAMERA_WEB_VIDEO_SNAPSHOT_URL", "http://127.0.0.1:8080/snapshot?topic=/image_raw"),
         help="web_video_server snapshot URL for an already-running ROS camera stream.",
     )
-    parser.add_argument("--web-video-timeout", type=float, default=8.0)
+    parser.add_argument("--web-video-timeout", type=float, default=2.0)
     parser.add_argument("--camera-index", type=int, default=0)
     parser.add_argument("--width", type=int, default=640)
     parser.add_argument("--height", type=int, default=480)
@@ -481,8 +501,22 @@ def main() -> None:
                     print(f"[ OK ] uploaded task {task_id} frame {uploaded}/{total_label}", flush=True)
                 except Exception as exc:
                     print(f"[WARN] upload failed: {exc}", flush=True)
+                    if camera is not None:
+                        try:
+                            camera.close()
+                        except Exception as close_exc:
+                            print(f"[WARN] camera close failed: {close_exc}", flush=True)
+                        camera = None
+                    try:
+                        upload_gpio_status(session, server, args.token, args.device_id, read_gpio_status(query_gpio))
+                        last_gpio_upload_at = time.time()
+                    except Exception as heartbeat_exc:
+                        print(f"[WARN] gpio status upload failed: {heartbeat_exc}", flush=True)
                     if mode in {"screenshot", "inspect"}:
                         break
+                    if max_frames != 0:
+                        break
+                    time.sleep(max(args.idle_poll_ms, 250) / 1000)
                 if (max_frames == 0 or uploaded < max_frames) and interval_ms > 0:
                     time.sleep(max(interval_ms, 150) / 1000)
 
