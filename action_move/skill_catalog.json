@@ -3,6 +3,7 @@
   "robot": "TurboPi",
   "notes": [
     "Camera look skills assume PWM servo 1 is pan and PWM servo 2 is tilt.",
+    "Look skills use 1000..2000 for a wider visible camera movement while staying inside the conservative remote-control range.",
     "If the physical direction is inverted, swap the corresponding left/right or up/down positions in this catalog.",
     "Base movement uses /cmd_vel and always publishes stop after a timed burst."
   ],
@@ -25,7 +26,7 @@
       "description": "驱动摄像头水平舵机向左偏转，改变摄像头观察方向。",
       "type": "camera_servo",
       "aliases": ["左看", "看左边", "摄像头向左", "镜头向左"],
-      "servo": {"id": 1, "position": 1200, "axis": "pan"}
+      "servo": {"id": 1, "position": 1000, "axis": "pan"}
     },
     {
       "id": "look_right",
@@ -33,7 +34,7 @@
       "description": "驱动摄像头水平舵机向右偏转，改变摄像头观察方向。",
       "type": "camera_servo",
       "aliases": ["右看", "看右边", "摄像头向右", "镜头向右"],
-      "servo": {"id": 1, "position": 1800, "axis": "pan"}
+      "servo": {"id": 1, "position": 2000, "axis": "pan"}
     },
     {
       "id": "look_up",
@@ -41,7 +42,7 @@
       "description": "驱动摄像头俯仰舵机向上偏转。",
       "type": "camera_servo",
       "aliases": ["上看", "看上面", "摄像头向上", "镜头向上"],
-      "servo": {"id": 2, "position": 1200, "axis": "tilt"}
+      "servo": {"id": 2, "position": 1000, "axis": "tilt"}
     },
     {
       "id": "look_down",
@@ -49,7 +50,7 @@
       "description": "驱动摄像头俯仰舵机向下偏转。",
       "type": "camera_servo",
       "aliases": ["下看", "看下面", "摄像头向下", "镜头向下"],
-      "servo": {"id": 2, "position": 1800, "axis": "tilt"}
+      "servo": {"id": 2, "position": 2000, "axis": "tilt"}
     },
     {
       "id": "move_forward",

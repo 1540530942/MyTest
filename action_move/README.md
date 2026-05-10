@@ -35,7 +35,7 @@ python3 action_move_executor.py 向左看
 
 After a camera look skill finishes, the executor requests `https://www.wangyutang.cn/camera/api/capture` so the camera page can refresh to the new direction. Base movement does not trigger a capture by default; set `capture_after_move` in `skill_catalog.json` if that becomes useful.
 
-The camera look skills currently assume PWM servo 1 is the pan axis and PWM servo 2 is the tilt axis. Safe starting positions are `1200`, `1500`, and `1800`; if the physical direction is reversed after calibration, swap the affected values in `skill_catalog.json`.
+The camera look skills currently assume PWM servo 1 is the pan axis and PWM servo 2 is the tilt axis. The active wider-view positions are `1000`, `1500`, and `2000`; if the physical direction is reversed after calibration, swap the affected values in `skill_catalog.json`.
 
 ## Data Flow
 
