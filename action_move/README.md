@@ -10,6 +10,8 @@ The useful control stack is ROS2 based. For normal application code, prefer publ
 
 The first tool layer is defined in `skill_catalog.json` and can be executed by `action_move_executor.py`.
 
+Image-based verification and the current camera-servo issue are documented in `camera_servo_verification.md`.
+
 | User phrase | Skill id | Hardware path |
 | --- | --- | --- |
 | 向左看 | `look_left` | PWM servo 1, pan left |
