@@ -3,7 +3,7 @@
   "robot": "TurboPi",
   "notes": [
     "Camera look skills assume PWM servo 1 is pan and PWM servo 2 is tilt.",
-    "Look skills use 1000..2000 for a wider visible camera movement while staying inside the conservative remote-control range.",
+    "Look skills use servo1=1000 for left and servo1=1700 for right after image-difference verification; 2000 can point too close to nearby objects.",
     "If the physical direction is inverted, swap the corresponding left/right or up/down positions in this catalog.",
     "Base movement uses /cmd_vel and always publishes stop after a timed burst.",
     "The original 0.10..0.12 movement values only converted to about 10..12 percent wheel speed, which can be below the physical movement threshold."
@@ -23,67 +23,139 @@
   "skills": [
     {
       "id": "look_left",
-      "name_zh": "向左看",
-      "description": "驱动摄像头水平舵机向左偏转，改变摄像头观察方向。",
+      "name_zh": "\u5411\u5de6\u770b",
+      "description": "\u9a71\u52a8\u6444\u50cf\u5934\u6c34\u5e73\u8235\u673a\u5411\u5de6\u504f\u8f6c\uff0c\u6539\u53d8\u6444\u50cf\u5934\u89c2\u5bdf\u65b9\u5411\u3002",
       "type": "camera_servo",
-      "aliases": ["左看", "看左边", "摄像头向左", "镜头向左"],
-      "servo": {"id": 1, "position": 1000, "axis": "pan"}
+      "aliases": [
+        "\u5de6\u770b",
+        "\u770b\u5de6\u8fb9",
+        "\u6444\u50cf\u5934\u5411\u5de6",
+        "\u955c\u5934\u5411\u5de6",
+        "\u8235\u673a\u5411\u5de6\u8f6c",
+        "\u5411\u5de6\u8f6c"
+      ],
+      "servo": {
+        "id": 1,
+        "position": 1000,
+        "axis": "pan"
+      }
     },
     {
       "id": "look_right",
-      "name_zh": "向右看",
-      "description": "驱动摄像头水平舵机向右偏转，改变摄像头观察方向。",
+      "name_zh": "\u5411\u53f3\u770b",
+      "description": "\u9a71\u52a8\u6444\u50cf\u5934\u6c34\u5e73\u8235\u673a\u5411\u53f3\u504f\u8f6c\uff0c\u6539\u53d8\u6444\u50cf\u5934\u89c2\u5bdf\u65b9\u5411\u3002",
       "type": "camera_servo",
-      "aliases": ["右看", "看右边", "摄像头向右", "镜头向右"],
-      "servo": {"id": 1, "position": 2000, "axis": "pan"}
+      "aliases": [
+        "\u53f3\u770b",
+        "\u770b\u53f3\u8fb9",
+        "\u6444\u50cf\u5934\u5411\u53f3",
+        "\u955c\u5934\u5411\u53f3",
+        "\u8235\u673a\u5411\u53f3\u8f6c",
+        "\u5411\u53f3\u8f6c"
+      ],
+      "servo": {
+        "id": 1,
+        "position": 1700,
+        "axis": "pan"
+      }
     },
     {
       "id": "look_up",
-      "name_zh": "向上看",
-      "description": "驱动摄像头俯仰舵机向上偏转。",
+      "name_zh": "\u5411\u4e0a\u770b",
+      "description": "\u9a71\u52a8\u6444\u50cf\u5934\u4fef\u4ef0\u8235\u673a\u5411\u4e0a\u504f\u8f6c\u3002",
       "type": "camera_servo",
-      "aliases": ["上看", "看上面", "摄像头向上", "镜头向上"],
-      "servo": {"id": 2, "position": 1000, "axis": "tilt"}
+      "aliases": [
+        "\u4e0a\u770b",
+        "\u770b\u4e0a\u9762",
+        "\u6444\u50cf\u5934\u5411\u4e0a",
+        "\u955c\u5934\u5411\u4e0a"
+      ],
+      "servo": {
+        "id": 2,
+        "position": 1000,
+        "axis": "tilt"
+      }
     },
     {
       "id": "look_down",
-      "name_zh": "向下看",
-      "description": "驱动摄像头俯仰舵机向下偏转。",
+      "name_zh": "\u5411\u4e0b\u770b",
+      "description": "\u9a71\u52a8\u6444\u50cf\u5934\u4fef\u4ef0\u8235\u673a\u5411\u4e0b\u504f\u8f6c\u3002",
       "type": "camera_servo",
-      "aliases": ["下看", "看下面", "摄像头向下", "镜头向下"],
-      "servo": {"id": 2, "position": 2000, "axis": "tilt"}
+      "aliases": [
+        "\u4e0b\u770b",
+        "\u770b\u4e0b\u9762",
+        "\u6444\u50cf\u5934\u5411\u4e0b",
+        "\u955c\u5934\u5411\u4e0b"
+      ],
+      "servo": {
+        "id": 2,
+        "position": 2000,
+        "axis": "tilt"
+      }
     },
     {
       "id": "move_forward",
-      "name_zh": "向前走",
-      "description": "底盘短距离向前移动。",
+      "name_zh": "\u5411\u524d\u8d70",
+      "description": "\u5e95\u76d8\u77ed\u8ddd\u79bb\u5411\u524d\u79fb\u52a8\u3002",
       "type": "base_move",
-      "aliases": ["前进", "往前走", "向前移动"],
-      "twist": {"linear_x": 0.35, "linear_y": 0.0, "angular_z": 0.0}
+      "aliases": [
+        "\u524d\u8fdb",
+        "\u5f80\u524d\u8d70",
+        "\u5411\u524d\u79fb\u52a8"
+      ],
+      "twist": {
+        "linear_x": 0.35,
+        "linear_y": 0.0,
+        "angular_z": 0.0
+      }
     },
     {
       "id": "move_backward",
-      "name_zh": "向后走",
-      "description": "底盘短距离向后移动。",
+      "name_zh": "\u5411\u540e\u8d70",
+      "description": "\u5e95\u76d8\u77ed\u8ddd\u79bb\u5411\u540e\u79fb\u52a8\u3002",
       "type": "base_move",
-      "aliases": ["后退", "往后走", "向后移动"],
-      "twist": {"linear_x": -0.35, "linear_y": 0.0, "angular_z": 0.0}
+      "aliases": [
+        "\u540e\u9000",
+        "\u5f80\u540e\u8d70",
+        "\u5411\u540e\u79fb\u52a8"
+      ],
+      "twist": {
+        "linear_x": -0.35,
+        "linear_y": 0.0,
+        "angular_z": 0.0
+      }
     },
     {
       "id": "move_left",
-      "name_zh": "向左走",
-      "description": "麦克纳姆轮底盘短距离向左平移。",
+      "name_zh": "\u5411\u5de6\u8d70",
+      "description": "\u9ea6\u514b\u7eb3\u59c6\u8f6e\u5e95\u76d8\u77ed\u8ddd\u79bb\u5411\u5de6\u5e73\u79fb\u3002",
       "type": "base_move",
-      "aliases": ["左移", "往左走", "向左平移"],
-      "twist": {"linear_x": 0.0, "linear_y": 0.35, "angular_z": 0.0}
+      "aliases": [
+        "\u5de6\u79fb",
+        "\u5f80\u5de6\u8d70",
+        "\u5411\u5de6\u5e73\u79fb"
+      ],
+      "twist": {
+        "linear_x": 0.0,
+        "linear_y": 0.35,
+        "angular_z": 0.0
+      }
     },
     {
       "id": "move_right",
-      "name_zh": "向右走",
-      "description": "麦克纳姆轮底盘短距离向右平移。",
+      "name_zh": "\u5411\u53f3\u8d70",
+      "description": "\u9ea6\u514b\u7eb3\u59c6\u8f6e\u5e95\u76d8\u77ed\u8ddd\u79bb\u5411\u53f3\u5e73\u79fb\u3002",
       "type": "base_move",
-      "aliases": ["右移", "往右走", "向右平移"],
-      "twist": {"linear_x": 0.0, "linear_y": -0.35, "angular_z": 0.0}
+      "aliases": [
+        "\u53f3\u79fb",
+        "\u5f80\u53f3\u8d70",
+        "\u5411\u53f3\u5e73\u79fb"
+      ],
+      "twist": {
+        "linear_x": 0.0,
+        "linear_y": -0.35,
+        "angular_z": 0.0
+      }
     }
   ]
 }
