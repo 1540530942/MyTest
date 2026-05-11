@@ -2,8 +2,8 @@
   "version": 1,
   "robot": "TurboPi",
   "notes": [
-    "Camera look skills assume PWM servo 1 is pan and PWM servo 2 is tilt.",
-    "Look skills use servo1=1000 for left and servo1=1700 for right after image-difference verification; 2000 can point too close to nearby objects.",
+    "Image calibration shows PWM servo 2 is the horizontal pan axis, while PWM servo 1 changes the vertical/pitch view.",
+    "Left/right look skills use servo2=1800 for left and servo2=1200 for right after image-difference verification.",
     "If the physical direction is inverted, swap the corresponding left/right or up/down positions in this catalog.",
     "Base movement uses /cmd_vel and always publishes stop after a timed burst.",
     "The original 0.10..0.12 movement values only converted to about 10..12 percent wheel speed, which can be below the physical movement threshold."
@@ -34,11 +34,7 @@
         "\u8235\u673a\u5411\u5de6\u8f6c",
         "\u5411\u5de6\u8f6c"
       ],
-      "servo": {
-        "id": 1,
-        "position": 1000,
-        "axis": "pan"
-      }
+      "servo": {"id": 2, "position": 1800, "axis": "pan"}
     },
     {
       "id": "look_right",
@@ -53,109 +49,55 @@
         "\u8235\u673a\u5411\u53f3\u8f6c",
         "\u5411\u53f3\u8f6c"
       ],
-      "servo": {
-        "id": 1,
-        "position": 1700,
-        "axis": "pan"
-      }
+      "servo": {"id": 2, "position": 1200, "axis": "pan"}
     },
     {
       "id": "look_up",
       "name_zh": "\u5411\u4e0a\u770b",
       "description": "\u9a71\u52a8\u6444\u50cf\u5934\u4fef\u4ef0\u8235\u673a\u5411\u4e0a\u504f\u8f6c\u3002",
       "type": "camera_servo",
-      "aliases": [
-        "\u4e0a\u770b",
-        "\u770b\u4e0a\u9762",
-        "\u6444\u50cf\u5934\u5411\u4e0a",
-        "\u955c\u5934\u5411\u4e0a"
-      ],
-      "servo": {
-        "id": 2,
-        "position": 1000,
-        "axis": "tilt"
-      }
+      "aliases": ["\u4e0a\u770b", "\u770b\u4e0a\u9762", "\u6444\u50cf\u5934\u5411\u4e0a", "\u955c\u5934\u5411\u4e0a"],
+      "servo": {"id": 2, "position": 1000, "axis": "tilt"}
     },
     {
       "id": "look_down",
       "name_zh": "\u5411\u4e0b\u770b",
       "description": "\u9a71\u52a8\u6444\u50cf\u5934\u4fef\u4ef0\u8235\u673a\u5411\u4e0b\u504f\u8f6c\u3002",
       "type": "camera_servo",
-      "aliases": [
-        "\u4e0b\u770b",
-        "\u770b\u4e0b\u9762",
-        "\u6444\u50cf\u5934\u5411\u4e0b",
-        "\u955c\u5934\u5411\u4e0b"
-      ],
-      "servo": {
-        "id": 2,
-        "position": 2000,
-        "axis": "tilt"
-      }
+      "aliases": ["\u4e0b\u770b", "\u770b\u4e0b\u9762", "\u6444\u50cf\u5934\u5411\u4e0b", "\u955c\u5934\u5411\u4e0b"],
+      "servo": {"id": 2, "position": 2000, "axis": "tilt"}
     },
     {
       "id": "move_forward",
       "name_zh": "\u5411\u524d\u8d70",
       "description": "\u5e95\u76d8\u77ed\u8ddd\u79bb\u5411\u524d\u79fb\u52a8\u3002",
       "type": "base_move",
-      "aliases": [
-        "\u524d\u8fdb",
-        "\u5f80\u524d\u8d70",
-        "\u5411\u524d\u79fb\u52a8"
-      ],
-      "twist": {
-        "linear_x": 0.35,
-        "linear_y": 0.0,
-        "angular_z": 0.0
-      }
+      "aliases": ["\u524d\u8fdb", "\u5f80\u524d\u8d70", "\u5411\u524d\u79fb\u52a8"],
+      "twist": {"linear_x": 0.35, "linear_y": 0.0, "angular_z": 0.0}
     },
     {
       "id": "move_backward",
       "name_zh": "\u5411\u540e\u8d70",
       "description": "\u5e95\u76d8\u77ed\u8ddd\u79bb\u5411\u540e\u79fb\u52a8\u3002",
       "type": "base_move",
-      "aliases": [
-        "\u540e\u9000",
-        "\u5f80\u540e\u8d70",
-        "\u5411\u540e\u79fb\u52a8"
-      ],
-      "twist": {
-        "linear_x": -0.35,
-        "linear_y": 0.0,
-        "angular_z": 0.0
-      }
+      "aliases": ["\u540e\u9000", "\u5f80\u540e\u8d70", "\u5411\u540e\u79fb\u52a8"],
+      "twist": {"linear_x": -0.35, "linear_y": 0.0, "angular_z": 0.0}
     },
     {
       "id": "move_left",
       "name_zh": "\u5411\u5de6\u8d70",
       "description": "\u9ea6\u514b\u7eb3\u59c6\u8f6e\u5e95\u76d8\u77ed\u8ddd\u79bb\u5411\u5de6\u5e73\u79fb\u3002",
       "type": "base_move",
-      "aliases": [
-        "\u5de6\u79fb",
-        "\u5f80\u5de6\u8d70",
-        "\u5411\u5de6\u5e73\u79fb"
-      ],
-      "twist": {
-        "linear_x": 0.0,
-        "linear_y": 0.35,
-        "angular_z": 0.0
-      }
+      "aliases": ["\u5de6\u79fb", "\u5f80\u5de6\u8d70", "\u5411\u5de6\u5e73\u79fb"],
+      "twist": {"linear_x": 0.0, "linear_y": 0.35, "angular_z": 0.0}
     },
     {
       "id": "move_right",
       "name_zh": "\u5411\u53f3\u8d70",
       "description": "\u9ea6\u514b\u7eb3\u59c6\u8f6e\u5e95\u76d8\u77ed\u8ddd\u79bb\u5411\u53f3\u5e73\u79fb\u3002",
       "type": "base_move",
-      "aliases": [
-        "\u53f3\u79fb",
-        "\u5f80\u53f3\u8d70",
-        "\u5411\u53f3\u5e73\u79fb"
-      ],
-      "twist": {
-        "linear_x": 0.0,
-        "linear_y": -0.35,
-        "angular_z": 0.0
-      }
+      "aliases": ["\u53f3\u79fb", "\u5f80\u53f3\u8d70", "\u5411\u53f3\u5e73\u79fb"],
+      "twist": {"linear_x": 0.0, "linear_y": -0.35, "angular_z": 0.0}
     }
   ]
 }
