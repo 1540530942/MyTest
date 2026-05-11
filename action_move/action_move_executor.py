@@ -41,7 +41,8 @@ def resolve_skill(catalog: dict[str, Any], text: str) -> dict[str, Any]:
 
 
 def run_in_container(container: str, command: str, dry_run: bool) -> None:
-    docker_command = ["docker", "exec", container, "bash", "-lc", command]
+    docker_user = "ubuntu"
+    docker_command = ["docker", "exec", "-u", docker_user, container, "bash", "-lc", command]
     if dry_run:
         print(" ".join(docker_command))
         return

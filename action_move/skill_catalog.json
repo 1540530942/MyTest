@@ -5,13 +5,14 @@
     "Camera look skills assume PWM servo 1 is pan and PWM servo 2 is tilt.",
     "Look skills use 1000..2000 for a wider visible camera movement while staying inside the conservative remote-control range.",
     "If the physical direction is inverted, swap the corresponding left/right or up/down positions in this catalog.",
-    "Base movement uses /cmd_vel and always publishes stop after a timed burst."
+    "Base movement uses /cmd_vel and always publishes stop after a timed burst.",
+    "The original 0.10..0.12 movement values only converted to about 10..12 percent wheel speed, which can be below the physical movement threshold."
   ],
   "defaults": {
     "ros_container": "turbopi",
     "cmd_vel_topic": "/cmd_vel",
     "pwm_servo_topic": "/ros_robot_controller/pwm_servo/set_state",
-    "move_duration_ms": 600,
+    "move_duration_ms": 800,
     "servo_duration_s": 0.35,
     "pwm_center": 1500,
     "camera_server": "https://www.wangyutang.cn/camera",
@@ -58,7 +59,7 @@
       "description": "底盘短距离向前移动。",
       "type": "base_move",
       "aliases": ["前进", "往前走", "向前移动"],
-      "twist": {"linear_x": 0.12, "linear_y": 0.0, "angular_z": 0.0}
+      "twist": {"linear_x": 0.35, "linear_y": 0.0, "angular_z": 0.0}
     },
     {
       "id": "move_backward",
@@ -66,7 +67,7 @@
       "description": "底盘短距离向后移动。",
       "type": "base_move",
       "aliases": ["后退", "往后走", "向后移动"],
-      "twist": {"linear_x": -0.12, "linear_y": 0.0, "angular_z": 0.0}
+      "twist": {"linear_x": -0.35, "linear_y": 0.0, "angular_z": 0.0}
     },
     {
       "id": "move_left",
@@ -74,7 +75,7 @@
       "description": "麦克纳姆轮底盘短距离向左平移。",
       "type": "base_move",
       "aliases": ["左移", "往左走", "向左平移"],
-      "twist": {"linear_x": 0.0, "linear_y": 0.10, "angular_z": 0.0}
+      "twist": {"linear_x": 0.0, "linear_y": 0.35, "angular_z": 0.0}
     },
     {
       "id": "move_right",
@@ -82,7 +83,7 @@
       "description": "麦克纳姆轮底盘短距离向右平移。",
       "type": "base_move",
       "aliases": ["右移", "往右走", "向右平移"],
-      "twist": {"linear_x": 0.0, "linear_y": -0.10, "angular_z": 0.0}
+      "twist": {"linear_x": 0.0, "linear_y": -0.35, "angular_z": 0.0}
     }
   ]
 }
